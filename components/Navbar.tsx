@@ -16,12 +16,18 @@ export default function Navbar() {
     }
 
     const loadUser = async () => {
+      if (!supabase || !isSupabaseEnabled) {
+        return;
+      }
       const { data } = await supabase.auth.getSession();
       setUserEmail(data.session?.user?.email ?? null);
     };
 
     loadUser();
 
+    if (!supabase || !isSupabaseEnabled) {
+      return;
+    }
     const { data: authListener } = supabase.auth.onAuthStateChange(
       (_event, session) => {
         setUserEmail(session?.user?.email ?? null);

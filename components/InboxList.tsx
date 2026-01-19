@@ -25,6 +25,12 @@ export default function InboxList() {
     }
 
     const loadNotifications = async () => {
+      if (!supabase || !isSupabaseEnabled) {
+        setIsLoading(false);
+        setErrorMessage("Supabase 尚未設定，無法載入通知。");
+        return;
+      }
+
       setIsLoading(true);
       setErrorMessage(null);
 

@@ -73,7 +73,7 @@ export default function GallerySection() {
     }
 
     const loadVotes = async (currentUserId: string | null) => {
-      if (!currentUserId) {
+      if (!currentUserId || !supabase || !isSupabaseEnabled) {
         setVoteMap({});
         return;
       }
@@ -89,6 +89,9 @@ export default function GallerySection() {
     };
 
     const loadSession = async () => {
+      if (!supabase || !isSupabaseEnabled) {
+        return;
+      }
       const { data } = await supabase.auth.getSession();
       const currentUser = data.session?.user ?? null;
       setUserId(currentUser?.id ?? null);

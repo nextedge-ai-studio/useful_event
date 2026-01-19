@@ -82,6 +82,9 @@ export default function SubmissionForm({
     }
 
     const loadSession = async () => {
+      if (!supabase || !isSupabaseEnabled) {
+        return;
+      }
       const { data } = await supabase.auth.getSession();
       const currentUserId = data.session?.user?.id ?? null;
       setUserId(currentUserId);

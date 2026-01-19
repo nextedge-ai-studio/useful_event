@@ -27,6 +27,9 @@ export default function RejectedNotice() {
     }
 
     const loadRejected = async () => {
+      if (!supabase || !isSupabaseEnabled) {
+        return;
+      }
       const { data: sessionData } = await supabase.auth.getSession();
       const userId = sessionData.session?.user?.id;
       if (!userId) {
