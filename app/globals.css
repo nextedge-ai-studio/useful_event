@@ -1,0 +1,74 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    height: 100%;
+  }
+
+  body {
+    min-height: 100%;
+    color: #0f172a;
+    background-color: #f8fafc;
+    background-image:
+      linear-gradient(
+        rgba(248, 250, 252, 0.88),
+        rgba(248, 250, 252, 0.88)
+      ),
+      url("/hourse.png"),
+      radial-gradient(
+        1200px 600px at 10% -10%,
+        rgba(125, 211, 252, 0.35),
+        transparent 60%
+      ),
+      radial-gradient(
+        900px 500px at 90% 0%,
+        rgba(191, 219, 254, 0.5),
+        transparent 55%
+      ),
+      radial-gradient(
+        1000px 700px at 50% 120%,
+        rgba(186, 230, 253, 0.4),
+        transparent 60%
+      );
+    background-repeat: no-repeat, no-repeat, no-repeat, no-repeat, no-repeat;
+    background-size:
+      100% 100%,
+      min(1200px, 90vw),
+      auto,
+      auto,
+      auto;
+    background-position:
+      center,
+      center 120px,
+      0% 0%,
+      0% 0%,
+      0% 0%;
+    background-attachment: fixed;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) and (min-width: 768px) {
+  body {
+    background-size: 160% 160%;
+    animation: sky-shift 60s ease-in-out infinite;
+  }
+}
+
+@keyframes sky-shift {
+  0%,
+  100% {
+    background-position: 0% 0%;
+  }
+  50% {
+    background-position: 100% 60%;
+  }
+}
+
+@media (max-width: 767px) {
+  body {
+    background-attachment: scroll;
+    animation: none;
+  }
+}
