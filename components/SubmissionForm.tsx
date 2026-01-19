@@ -55,10 +55,14 @@ export default function SubmissionForm({
     if (files.length === 0) {
       return;
     }
+    // 當有文件時，previewUrls 就是由文件創建的 object URLs，需要清理
+    const urlsToRevoke = files.length > 0 ? [...previewUrls] : [];
     return () => {
-      files.forEach((item) => URL.revokeObjectURL(item));
+      urlsToRevoke.forEach((url) => {
+        URL.revokeObjectURL(url);
+      });
     };
-  }, [files]);
+  }, [files, previewUrls]);
 
   const handleAddImageUrl = () => {
     const trimmed = newImageUrl.trim();
