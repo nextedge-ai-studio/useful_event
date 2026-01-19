@@ -46,7 +46,14 @@ export default function Footer() {
         </div>
         <div className="mt-8 flex flex-col gap-3 border-t border-white/30 pt-6 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between">
           <span>© 2026 Sky Pegasus. All rights reserved.</span>
-          <span>Made for Vibe Coding Community</span>
+          <a
+            href="https://www.nextedge-ai-studio.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="transition hover:text-slate-700"
+          >
+            made by nextedge ai studio
+          </a>
         </div>
       </div>
     </footer>
