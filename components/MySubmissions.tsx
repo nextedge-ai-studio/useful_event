@@ -47,9 +47,10 @@ export default function MySubmissions() {
       return;
     }
 
-      setIsLoading(true);
-      setErrorMessage(null);
+    setIsLoading(true);
+    setErrorMessage(null);
 
+    try {
       const { data: sessionData } = await supabase.auth.getSession();
       const userId = sessionData.session?.user?.id;
 
@@ -75,6 +76,11 @@ export default function MySubmissions() {
 
       setItems(data ?? []);
       setIsLoading(false);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "載入投稿時發生未知錯誤";
+      setErrorMessage(errorMessage);
+      setIsLoading(false);
+    }
   };
 
   useEffect(() => {

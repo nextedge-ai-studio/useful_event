@@ -45,22 +45,28 @@ export default function GallerySection() {
     setIsLoading(true);
     setErrorMessage(null);
 
-    const { data, error } = await supabase
-      .from("works_with_votes")
-      .select(
-        "id,title,author_name,description,image_url,image_urls,demo_url,status,created_at,vote_count"
-      )
-      .eq("status", "approved")
-      .order("created_at", { ascending: false });
+    try {
+      const { data, error } = await supabase
+        .from("works_with_votes")
+        .select(
+          "id,title,author_name,description,image_url,image_urls,demo_url,status,created_at,vote_count"
+        )
+        .eq("status", "approved")
+        .order("created_at", { ascending: false });
 
-    if (error) {
-      setErrorMessage(error.message);
+      if (error) {
+        setErrorMessage(error.message);
+        setIsLoading(false);
+        return;
+      }
+
+      setWorks(data ?? []);
       setIsLoading(false);
-      return;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "載入作品時發生未知錯誤";
+      setErrorMessage(errorMessage);
+      setIsLoading(false);
     }
-
-    setWorks(data ?? []);
-    setIsLoading(false);
   }, []);
 
   useEffect(() => {
