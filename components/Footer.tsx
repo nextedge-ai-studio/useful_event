@@ -50,9 +50,9 @@ export default function Footer() {
             href="https://www.nextedge-ai-studio.com/"
             target="_blank"
             rel="noopener noreferrer"
-            className="transition hover:text-slate-700"
+            className="font-medium transition-all duration-200 hover:scale-105 hover:text-slate-900 hover:underline"
           >
-            made by nextedge ai studio
+            Made by NextEdge AI Studio
           </a>
         </div>
       </div>
