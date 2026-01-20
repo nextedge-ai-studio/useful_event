@@ -117,9 +117,15 @@ export default function MySubmissions() {
   }
 
   if (errorMessage) {
+    const isColumnMissing = errorMessage.includes("youtube_url") || errorMessage.includes("column");
     return (
       <div className="rounded-3xl border border-amber-200 bg-amber-50/80 p-6 text-sm text-amber-700">
-        {errorMessage}
+        <p className="font-semibold mb-2">載入失敗：{errorMessage}</p>
+        {isColumnMissing && (
+          <p className="mt-2 text-amber-600 bg-white/50 p-3 rounded-xl border border-amber-100">
+            提示：看起來是資料庫尚未更新。請確保已執行完畢目前的 SQL Migration 檔案以新增 <code>youtube_url</code> 欄位。
+          </p>
+        )}
       </div>
     );
   }

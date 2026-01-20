@@ -152,12 +152,14 @@ export default function Navbar() {
                 <div className="absolute right-0 mt-2 w-48 rounded-2xl border border-white/40 bg-white/80 p-2 text-sm text-slate-600 shadow-blue-soft supports-[backdrop-filter]:bg-white/70 supports-[backdrop-filter]:backdrop-blur-md">
                   <Link
                     href="/inbox"
+                    onClick={() => setMenuOpen(false)}
                     className="block rounded-xl px-3 py-2 transition hover:bg-white/70 hover:text-slate-900"
                   >
                     通知中心
                   </Link>
                   <Link
                     href="/submit"
+                    onClick={() => setMenuOpen(false)}
                     className="block rounded-xl px-3 py-2 transition hover:bg-white/70 hover:text-slate-900"
                   >
                     我的投稿
