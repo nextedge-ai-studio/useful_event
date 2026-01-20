@@ -46,25 +46,35 @@ export default function GallerySection() {
     setErrorMessage(null);
 
     try {
+      // 使用 AbortController 實現超時
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10秒超時
+
       const { data, error } = await supabase
         .from("works_with_votes")
         .select(
           "id,title,author_name,description,image_url,image_urls,demo_url,status,created_at,vote_count"
         )
         .eq("status", "approved")
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false })
+        .abortSignal(controller.signal);
+
+      clearTimeout(timeoutId);
 
       if (error) {
         setErrorMessage(error.message);
-        setIsLoading(false);
         return;
       }
 
       setWorks(data ?? []);
-      setIsLoading(false);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "載入作品時發生未知錯誤";
-      setErrorMessage(errorMessage);
+      if (err instanceof Error && err.name === "AbortError") {
+        setErrorMessage("載入超時，請重新整理頁面。");
+      } else {
+        const msg = err instanceof Error ? err.message : "載入作品時發生未知錯誤";
+        setErrorMessage(msg);
+      }
+    } finally {
       setIsLoading(false);
     }
   }, []);
@@ -223,14 +233,43 @@ export default function GallerySection() {
     <div className="space-y-4">
       {errorMessage && (
         <div className="mx-auto w-full max-w-6xl px-6">
-          <div className="rounded-2xl border border-amber-200 bg-amber-50/80 px-4 py-3 text-sm text-amber-700">
-            {errorMessage}
+          <div className="flex flex-col items-center gap-3 rounded-2xl border border-amber-200 bg-amber-50/80 px-4 py-4 text-sm text-amber-700 sm:flex-row sm:justify-between">
+            <span>{errorMessage}</span>
+            <button
+              type="button"
+              onClick={() => fetchWorks()}
+              className="rounded-full bg-amber-100 px-4 py-1.5 text-xs font-medium text-amber-700 transition hover:bg-amber-200"
+            >
+              重試
+            </button>
           </div>
         </div>
       )}
       {isLoading ? (
-        <div className="mx-auto w-full max-w-6xl px-6 py-24 text-center text-sm text-slate-500">
-          作品載入中...
+        <div className="mx-auto w-full max-w-6xl px-6 py-24 text-center">
+          <div className="inline-flex items-center gap-2 text-sm text-slate-500">
+            <svg
+              className="h-4 w-4 animate-spin"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+              />
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              />
+            </svg>
+            作品載入中...
+          </div>
         </div>
       ) : (
         <GalleryGrid works={mappedWorks} />

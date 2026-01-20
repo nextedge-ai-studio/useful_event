@@ -39,29 +39,37 @@ export default function InboxList() {
         const userId = sessionData.session?.user?.id;
 
         if (!userId) {
-          setIsLoading(false);
           setErrorMessage("請先登入後查看通知。");
           return;
         }
+
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000);
 
         const { data, error } = await supabase
           .from("notifications")
           .select("id,title,body,created_at,read_at")
           .eq("user_id", userId)
-          .order("created_at", { ascending: false });
+          .order("created_at", { ascending: false })
+          .abortSignal(controller.signal);
+
+        clearTimeout(timeoutId);
 
         if (error) {
           setErrorMessage(error.message);
-          setIsLoading(false);
           return;
         }
 
         setItems(data ?? []);
-        setIsLoading(false);
       } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : "載入通知時發生未知錯誤";
-        setErrorMessage(errorMessage);
+        if (err instanceof Error && err.name === "AbortError") {
+          setErrorMessage("載入超時，請重新整理頁面。");
+        } else {
+          const msg =
+            err instanceof Error ? err.message : "載入通知時發生未知錯誤";
+          setErrorMessage(msg);
+        }
+      } finally {
         setIsLoading(false);
       }
     };
@@ -71,8 +79,30 @@ export default function InboxList() {
 
   if (isLoading) {
     return (
-      <div className="rounded-3xl border border-white/30 bg-white/60 p-8 text-center text-sm text-slate-500 shadow-blue-soft supports-[backdrop-filter]:bg-white/50 supports-[backdrop-filter]:backdrop-blur-md">
-        通知載入中...
+      <div className="rounded-3xl border border-white/30 bg-white/60 p-8 text-center shadow-blue-soft supports-[backdrop-filter]:bg-white/50 supports-[backdrop-filter]:backdrop-blur-md">
+        <div className="inline-flex items-center gap-2 text-sm text-slate-500">
+          <svg
+            className="h-4 w-4 animate-spin"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <circle
+              className="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              strokeWidth="4"
+            />
+            <path
+              className="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+            />
+          </svg>
+          通知載入中...
+        </div>
       </div>
     );
   }
