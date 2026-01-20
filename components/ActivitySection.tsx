@@ -68,10 +68,11 @@ const judges = [
     link: "https://iamraven.notion.site/Raven-2ee021a1715c80f0814afd1c3bb70040",
   },
   {
-    name: "評審邀請中",
-    title: "神秘嘉賓",
-    description: "敬請期待",
-    image: null,
+    name: "Andrew Shih",
+    title: "特邀評審",
+    description: "點擊查看詳細介紹",
+    image: "/judge-andrew.png",
+    link: "https://sites.google.com/view/andrewshih-resume/",
   },
 ];
 
