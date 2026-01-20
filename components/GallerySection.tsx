@@ -35,86 +35,114 @@ export default function GallerySection() {
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const fetchWorks = useCallback(async () => {
-    if (!supabase || !isSupabaseEnabled) {
-      setIsLoading(false);
-      setErrorMessage("Supabase 尚未設定，無法載入作品。");
-      return;
-    }
 
-    setIsLoading(true);
-    setErrorMessage(null);
-
-    try {
-      const { data, error } = await supabase
-        .from("works_with_votes")
-        .select(
-          "id,title,author_name,description,image_url,image_urls,demo_url,status,created_at,vote_count"
-        )
-        .eq("status", "approved")
-        .order("created_at", { ascending: false });
-
-      if (error) {
-        setErrorMessage(error.message);
-        return;
-      }
-
-      setWorks(data ?? []);
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : "載入作品時發生未知錯誤";
-      setErrorMessage(msg);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
 
   useEffect(() => {
-    fetchWorks();
-  }, [fetchWorks]);
+    let isMounted = true;
 
-  useEffect(() => {
-    if (!supabase || !isSupabaseEnabled) {
-      return;
-    }
-
-    const loadVotes = async (currentUserId: string | null) => {
-      if (!currentUserId || !supabase || !isSupabaseEnabled) {
-        setVoteMap({});
-        return;
-      }
-      const { data: voteData } = await supabase
-        .from("votes")
-        .select("work_id")
-        .eq("user_id", currentUserId);
-      const map: Record<string, boolean> = {};
-      voteData?.forEach((vote) => {
-        map[vote.work_id] = true;
-      });
-      setVoteMap(map);
-    };
-
-    const loadSession = async () => {
+    const init = async () => {
       if (!supabase || !isSupabaseEnabled) {
+        setIsLoading(false);
+        setErrorMessage("Supabase 尚未設定，無法載入作品。");
         return;
       }
-      const { data } = await supabase.auth.getSession();
-      const currentUser = data.session?.user ?? null;
-      setUserId(currentUser?.id ?? null);
-      await loadVotes(currentUser?.id ?? null);
+
+      // 先載入作品
+      setIsLoading(true);
+      setErrorMessage(null);
+
+      try {
+        const { data, error } = await supabase
+          .from("works_with_votes")
+          .select(
+            "id,title,author_name,description,image_url,image_urls,demo_url,status,created_at,vote_count"
+          )
+          .eq("status", "approved")
+          .order("created_at", { ascending: false });
+
+        if (!isMounted) return;
+
+        if (error) {
+          setErrorMessage(error.message);
+          setIsLoading(false);
+          return;
+        }
+
+        setWorks(data ?? []);
+        setIsLoading(false);
+      } catch (err) {
+        if (!isMounted) return;
+        const msg = err instanceof Error ? err.message : "載入作品時發生未知錯誤";
+        setErrorMessage(msg);
+        setIsLoading(false);
+        return;
+      }
+
+      // 作品載入完成後，再載入使用者投票狀態（非阻塞）
+      try {
+        const { data: sessionData } = await supabase.auth.getSession();
+        if (!isMounted) return;
+
+        const currentUser = sessionData.session?.user ?? null;
+        setUserId(currentUser?.id ?? null);
+
+        if (currentUser?.id) {
+          const { data: voteData } = await supabase
+            .from("votes")
+            .select("work_id")
+            .eq("user_id", currentUser.id);
+
+          if (!isMounted) return;
+
+          const map: Record<string, boolean> = {};
+          voteData?.forEach((vote) => {
+            map[vote.work_id] = true;
+          });
+          setVoteMap(map);
+        }
+      } catch {
+        // 投票狀態載入失敗不影響主要功能
+      }
     };
 
-    loadSession();
+    init();
 
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
+    // Auth 狀態變化監聽器
+    let authListener: { subscription: { unsubscribe: () => void } } | null = null;
+    if (supabase && isSupabaseEnabled) {
+      const { data } = supabase.auth.onAuthStateChange(async (_event, session) => {
+        if (!isMounted) return;
+
         const currentUserId = session?.user?.id ?? null;
         setUserId(currentUserId);
-        await loadVotes(currentUserId);
-      }
-    );
+
+        if (currentUserId && supabase) {
+          try {
+            const { data: voteData } = await supabase
+              .from("votes")
+              .select("work_id")
+              .eq("user_id", currentUserId);
+
+            if (!isMounted) return;
+
+            const map: Record<string, boolean> = {};
+            voteData?.forEach((vote) => {
+              map[vote.work_id] = true;
+            });
+            setVoteMap(map);
+          } catch {
+            // 忽略錯誤
+          }
+        } else {
+          setVoteMap({});
+        }
+      });
+      authListener = data;
+    }
 
     return () => {
-      authListener.subscription.unsubscribe();
+      isMounted = false;
+      authListener?.subscription.unsubscribe();
     };
   }, []);
 
@@ -226,7 +254,7 @@ export default function GallerySection() {
             <span>{errorMessage}</span>
             <button
               type="button"
-              onClick={() => fetchWorks()}
+              onClick={() => window.location.reload()}
               className="rounded-full bg-amber-100 px-4 py-1.5 text-xs font-medium text-amber-700 transition hover:bg-amber-200"
             >
               重試
