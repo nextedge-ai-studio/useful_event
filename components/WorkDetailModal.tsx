@@ -2,7 +2,8 @@
 
 import Image from "next/image";
 import { useState } from "react";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { extractYouTubeId } from "@/lib/utils";
 import { ExternalLink, ChevronLeft, ChevronRight } from "lucide-react";
 
@@ -42,6 +43,10 @@ export default function WorkDetailModal({
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-h-[90vh] max-w-4xl overflow-y-auto">
+        <DialogTitle className="sr-only">{work.title}</DialogTitle>
+        <VisuallyHidden>
+          <DialogDescription>{work.description}</DialogDescription>
+        </VisuallyHidden>
         <div className="space-y-6">
           {/* YouTube 影片（優先顯示）或圖片輪播 */}
           {videoId ? (
