@@ -18,20 +18,26 @@ const serif = Noto_Serif_TC({
 });
 
 const siteUrl =
-  process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  process.env.NEXT_PUBLIC_SITE_URL ?? "https://skypegasus-useful.vercel.app";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  title: "Sky Pegasus｜天馬行空",
-  description: "2026 Vibe Coding Creative Event",
+  title: "Sky Pegasus｜天馬行空 2026 Vibe Coding 投稿活動",
+  description:
+    "Sky Pegasus 天馬行空 2026 Vibe Coding 投稿活動官方網站。查看活動時程、投稿規則、評選方式與精選作品，邀請所有創作者分享天馬行空的靈感。",
   alternates: {
     canonical: "/",
+    languages: {
+      "zh-Hant": "/",
+      "x-default": "/",
+    },
   },
   openGraph: {
     type: "website",
     url: "/",
-    title: "Sky Pegasus｜天馬行空",
-    description: "2026 Vibe Coding Creative Event",
+    title: "Sky Pegasus｜天馬行空 2026 Vibe Coding 投稿活動",
+    description:
+      "Sky Pegasus 天馬行空 2026 Vibe Coding 投稿活動官方網站。查看活動時程、投稿規則、評選方式與精選作品，邀請所有創作者分享天馬行空的靈感。",
     images: [
       {
         url: "/hourse.png",
@@ -43,8 +49,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Sky Pegasus｜天馬行空",
-    description: "2026 Vibe Coding Creative Event",
+    title: "Sky Pegasus｜天馬行空 2026 Vibe Coding 投稿活動",
+    description:
+      "Sky Pegasus 天馬行空 2026 Vibe Coding 投稿活動官方網站。查看活動時程、投稿規則、評選方式與精選作品，邀請所有創作者分享天馬行空的靈感。",
     images: ["/hourse.png"],
   },
 };
