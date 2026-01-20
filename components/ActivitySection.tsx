@@ -91,7 +91,7 @@ export default function ActivitySection() {
             <h2 className="font-serif text-3xl text-slate-900 sm:text-4xl">
               2026 過年節慶活動｜Vibe Coding 投稿活動
             </h2>
-            <div className="mt-8 flex flex-wrap justify-center gap-3 sm:justify-start bg-slate-100/50 p-2 rounded-full w-fit mx-auto sm:mx-0 border border-white/60 shadow-inner">
+            <div className="mt-8 flex flex-nowrap overflow-x-auto max-w-full justify-start sm:justify-start gap-3 bg-slate-100/50 p-2 rounded-full w-full sm:w-fit mx-auto sm:mx-0 border border-white/60 shadow-inner no-scrollbar">
               {[
                 { id: "activity", label: "活動辦法" },
                 { id: "judges", label: "評審陣容" },
@@ -100,7 +100,7 @@ export default function ActivitySection() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as Tab)}
-                  className={`px-8 py-3 rounded-full text-base font-medium transition-all duration-300 relative ${activeTab === tab.id
+                  className={`px-6 py-3 sm:px-8 rounded-full text-sm sm:text-base font-medium transition-all duration-300 relative whitespace-nowrap flex-shrink-0 ${activeTab === tab.id
                     ? "text-white shadow-md"
                     : "text-slate-500 hover:text-slate-900 hover:bg-white/60"
                     }`}
