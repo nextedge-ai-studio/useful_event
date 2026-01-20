@@ -61,10 +61,11 @@ const qna = [
 
 const judges = [
   {
-    name: "評審邀請中",
-    title: "神秘嘉賓",
-    description: "敬請期待",
-    image: null,
+    name: "Raven",
+    title: "特邀評審",
+    description: "點擊查看詳細介紹",
+    image: "/judge-raven.jpg",
+    link: "https://iamraven.notion.site/Raven-2ee021a1715c80f0814afd1c3bb70040",
   },
   {
     name: "評審邀請中",
@@ -242,33 +243,51 @@ export default function ActivitySection() {
                   transition={{ duration: 0.3 }}
                   className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3"
                 >
-                  {judges.map((judge, index) => (
-                    <div
-                      key={index}
-                      className="group relative overflow-hidden rounded-3xl border border-white/40 bg-white/50 p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-md"
-                    >
-                      <div className="mb-4 flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-slate-100 to-slate-200 text-3xl shadow-inner mx-auto">
-                        {judge.image ? (
-                          <Image
-                            src={judge.image}
-                            alt={judge.name}
-                            width={96}
-                            height={96}
-                            className="h-full w-full rounded-full object-cover"
-                          />
-                        ) : (
-                          <span className="text-slate-400">?</span>
-                        )}
+                  {judges.map((judge, index) => {
+                    const CardContent = (
+                      <>
+                        <div className="mb-4 flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-slate-100 to-slate-200 text-3xl shadow-inner mx-auto overflow-hidden">
+                          {judge.image ? (
+                            <Image
+                              src={judge.image}
+                              alt={judge.name}
+                              width={96}
+                              height={96}
+                              className="h-full w-full object-cover"
+                            />
+                          ) : (
+                            <span className="text-slate-400">?</span>
+                          )}
+                        </div>
+                        <div className="text-center space-y-2">
+                          <h4 className="text-lg font-bold text-slate-900 group-hover:text-blue-600 transition-colors">{judge.name}</h4>
+                          <p className="text-sm font-medium text-sky-600">{judge.title}</p>
+                          <p className="text-sm text-slate-500 leading-relaxed">
+                            {judge.description}
+                          </p>
+                        </div>
+                      </>
+                    );
+
+                    return judge.link ? (
+                      <a
+                        key={index}
+                        href={judge.link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="group relative overflow-hidden rounded-3xl border border-white/40 bg-white/50 p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-md block cursor-pointer"
+                      >
+                        {CardContent}
+                      </a>
+                    ) : (
+                      <div
+                        key={index}
+                        className="group relative overflow-hidden rounded-3xl border border-white/40 bg-white/50 p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-md"
+                      >
+                        {CardContent}
                       </div>
-                      <div className="text-center space-y-2">
-                        <h4 className="text-lg font-bold text-slate-900">{judge.name}</h4>
-                        <p className="text-sm font-medium text-sky-600">{judge.title}</p>
-                        <p className="text-sm text-slate-500 leading-relaxed">
-                          {judge.description}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                   <div className="col-span-full mt-8 text-center">
                     <p className="text-sm text-slate-500">更多重磅評審持續邀請中...</p>
                   </div>
