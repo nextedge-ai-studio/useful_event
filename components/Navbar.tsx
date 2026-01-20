@@ -12,7 +12,18 @@ export default function Navbar() {
   const [isInAppBrowser, setIsInAppBrowser] = useState(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
 
+  // 追蹤上次的 session 狀態，避免重複發送請求
+  const lastSessionRef = useRef<string | null>(null);
+
   const syncSessionCookie = async (session: Session | null) => {
+    const sessionKey = session?.access_token ?? null;
+
+    // 如果 session 狀態沒變，不發送請求
+    if (lastSessionRef.current === sessionKey) {
+      return;
+    }
+    lastSessionRef.current = sessionKey;
+
     try {
       if (!session) {
         await fetch("/api/auth/session", { method: "DELETE" });
@@ -44,11 +55,14 @@ export default function Navbar() {
       return;
     }
 
+    let isMounted = true;
+
     const loadUser = async () => {
       if (!supabase || !isSupabaseEnabled) {
         return;
       }
       const { data } = await supabase.auth.getSession();
+      if (!isMounted) return;
       const session = data.session;
       setUserEmail(session?.user?.email ?? null);
       await syncSessionCookie(session);
@@ -56,17 +70,16 @@ export default function Navbar() {
 
     loadUser();
 
-    if (!supabase || !isSupabaseEnabled) {
-      return;
-    }
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
+        if (!isMounted) return;
         setUserEmail(session?.user?.email ?? null);
         await syncSessionCookie(session ?? null);
       }
     );
 
     return () => {
+      isMounted = false;
       authListener.subscription.unsubscribe();
     };
   }, []);
@@ -175,8 +188,8 @@ export default function Navbar() {
                 {!isSupabaseEnabled
                   ? "尚未設定 Supabase"
                   : isLoading
-                  ? "連線中..."
-                  : "Google 登入"}
+                    ? "連線中..."
+                    : "Google 登入"}
               </button>
               {isInAppBrowser && (
                 <span className="text-[11px] text-amber-600">

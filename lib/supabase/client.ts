@@ -11,17 +11,18 @@ export const supabase =
         autoRefreshToken: true,
         detectSessionInUrl: true,
       },
-      // 關閉 realtime 避免 WebSocket 連線問題
       realtime: {
         params: {
-          eventsPerSecond: 0,
+          eventsPerSecond: -1,
         },
       },
-      // 全域設定
       global: {
         headers: {
           'x-client-info': 'useful-event-web',
         },
+      },
+      db: {
+        schema: 'public',
       },
     })
     : null;

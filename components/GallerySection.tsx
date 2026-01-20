@@ -107,42 +107,8 @@ export default function GallerySection() {
 
     init();
 
-    // Auth 狀態變化監聽器
-    let authListener: { subscription: { unsubscribe: () => void } } | null = null;
-    if (supabase && isSupabaseEnabled) {
-      const { data } = supabase.auth.onAuthStateChange(async (_event, session) => {
-        if (!isMounted) return;
-
-        const currentUserId = session?.user?.id ?? null;
-        setUserId(currentUserId);
-
-        if (currentUserId && supabase) {
-          try {
-            const { data: voteData } = await supabase
-              .from("votes")
-              .select("work_id")
-              .eq("user_id", currentUserId);
-
-            if (!isMounted) return;
-
-            const map: Record<string, boolean> = {};
-            voteData?.forEach((vote) => {
-              map[vote.work_id] = true;
-            });
-            setVoteMap(map);
-          } catch {
-            // 忽略錯誤
-          }
-        } else {
-          setVoteMap({});
-        }
-      });
-      authListener = data;
-    }
-
     return () => {
       isMounted = false;
-      authListener?.subscription.unsubscribe();
     };
   }, []);
 
