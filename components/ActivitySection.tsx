@@ -213,14 +213,33 @@ export default function ActivitySection() {
                       </ul>
                     </div>
                     {/* 獎勵 */}
-                    <div className="rounded-2xl border border-white/40 bg-white/70 p-6 text-sm text-slate-600 shadow-sm">
+                    <div className="rounded-2xl border border-white/40 bg-white/70 p-6 text-sm text-slate-600 shadow-sm space-y-5">
                       <h4 className="font-serif text-xl text-slate-900">七、活動獎勵</h4>
-                      <p className="mt-4 text-base font-medium text-amber-600">
-                        🎁 Zeabur AI Hub 20 美金儲值額度 × 1 名
-                      </p>
-                      <p className="mt-2 text-xs text-slate-500 leading-relaxed">
-                        得獎名單將於投票結束後公告，並由主辦單位主動聯繫得獎者。
-                      </p>
+
+                      <div className="space-y-2">
+                        <p className="text-base font-bold text-amber-600">
+                          🎁 Zeabur AI Hub 20 美金儲值額度 × 2 名
+                        </p>
+                        <p className="text-xs text-slate-500">
+                          由全體投票結果中，依得票數高低選出。
+                        </p>
+                      </div>
+
+                      <div className="space-y-2">
+                        <p className="text-base font-bold text-sky-600">
+                          🌟 入圍作品專屬分享機會
+                        </p>
+                        <p className="leading-relaxed">
+                          凡入圍本次活動之作品，皆可 <span className="font-bold text-slate-700 bg-sky-100 px-1 rounded">免費參與 2/28 舉辦之 Vibe Coding 線上／實體分享活動</span>，向社群分享你的創作想法、流程與體驗設計，讓更多人看見你的作品與思考方式。
+                        </p>
+                      </div>
+
+                      <div className="pt-3 border-t border-slate-200/60 space-y-2">
+                        <p className="font-bold text-slate-800">📢 得獎與入圍名單公告方式</p>
+                        <p className="leading-relaxed text-slate-500">
+                          得獎名單與入圍名單將於投票結束後公告，並由主辦單位主動聯繫相關創作者。
+                        </p>
+                      </div>
                     </div>
                     {/* 注意事項 */}
                     <div className="rounded-2xl border border-white/40 bg-white/70 p-6 text-sm text-slate-600 shadow-sm">
