@@ -20,7 +20,7 @@ export default function Footer() {
             </div>
             <div className="grid gap-1.5 text-sm text-slate-600">
               <p>Email｜usefulvibecode@gmail.com</p>
-              <p>IG｜<a href="https://usefulvibecoding.com/" target="_blank" rel="noopener" className="hover:text-sky-500 underline decoration-sky-200">usefulvibecoding.com</a></p>
+              <p>Web｜<a href="https://usefulvibecoding.com/" target="_blank" rel="noopener" className="hover:text-sky-500 underline decoration-sky-200">usefulvibecoding.com</a></p>
               <p>Discord｜<a href="https://discord.gg/34fVWX3tsp" target="_blank" rel="noopener" className="hover:text-sky-500 underline decoration-sky-200">點此加入 Discord</a></p>
             </div>
           </div>
