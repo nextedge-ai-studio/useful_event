@@ -289,9 +289,7 @@ export default function ActivitySection() {
                       </div>
                     );
                   })}
-                  <div className="col-span-full mt-8 text-center">
-                    <p className="text-sm text-slate-500">更多重磅評審持續邀請中...</p>
-                  </div>
+
                 </motion.div>
               )}
 
