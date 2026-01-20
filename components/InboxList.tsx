@@ -43,17 +43,11 @@ export default function InboxList() {
           return;
         }
 
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000);
-
         const { data, error } = await supabase
           .from("notifications")
           .select("id,title,body,created_at,read_at")
           .eq("user_id", userId)
-          .order("created_at", { ascending: false })
-          .abortSignal(controller.signal);
-
-        clearTimeout(timeoutId);
+          .order("created_at", { ascending: false });
 
         if (error) {
           setErrorMessage(error.message);
@@ -62,13 +56,9 @@ export default function InboxList() {
 
         setItems(data ?? []);
       } catch (err) {
-        if (err instanceof Error && err.name === "AbortError") {
-          setErrorMessage("載入超時，請重新整理頁面。");
-        } else {
-          const msg =
-            err instanceof Error ? err.message : "載入通知時發生未知錯誤";
-          setErrorMessage(msg);
-        }
+        const msg =
+          err instanceof Error ? err.message : "載入通知時發生未知錯誤";
+        setErrorMessage(msg);
       } finally {
         setIsLoading(false);
       }

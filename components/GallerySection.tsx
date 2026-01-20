@@ -46,20 +46,13 @@ export default function GallerySection() {
     setErrorMessage(null);
 
     try {
-      // 使用 AbortController 實現超時
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10秒超時
-
       const { data, error } = await supabase
         .from("works_with_votes")
         .select(
           "id,title,author_name,description,image_url,image_urls,demo_url,status,created_at,vote_count"
         )
         .eq("status", "approved")
-        .order("created_at", { ascending: false })
-        .abortSignal(controller.signal);
-
-      clearTimeout(timeoutId);
+        .order("created_at", { ascending: false });
 
       if (error) {
         setErrorMessage(error.message);
@@ -68,12 +61,8 @@ export default function GallerySection() {
 
       setWorks(data ?? []);
     } catch (err) {
-      if (err instanceof Error && err.name === "AbortError") {
-        setErrorMessage("載入超時，請重新整理頁面。");
-      } else {
-        const msg = err instanceof Error ? err.message : "載入作品時發生未知錯誤";
-        setErrorMessage(msg);
-      }
+      const msg = err instanceof Error ? err.message : "載入作品時發生未知錯誤";
+      setErrorMessage(msg);
     } finally {
       setIsLoading(false);
     }
@@ -153,26 +142,26 @@ export default function GallerySection() {
         prev.map((work) =>
           work.id === workId
             ? {
-                ...work,
-                vote_count: hasVoted
-                  ? Math.max(0, work.vote_count - 1)
-                  : work.vote_count + 1,
-              }
+              ...work,
+              vote_count: hasVoted
+                ? Math.max(0, work.vote_count - 1)
+                : work.vote_count + 1,
+            }
             : work
         )
       );
 
       const { data, error } = hasVoted
         ? await supabase
-            .from("votes")
-            .delete()
-            .eq("work_id", workId)
-            .eq("user_id", userId)
-            .select("id")
+          .from("votes")
+          .delete()
+          .eq("work_id", workId)
+          .eq("user_id", userId)
+          .select("id")
         : await supabase
-            .from("votes")
-            .insert({ work_id: workId, user_id: userId })
-            .select("id");
+          .from("votes")
+          .insert({ work_id: workId, user_id: userId })
+          .select("id");
 
       if (error) {
         setVoteMap((prev) => ({ ...prev, [workId]: hasVoted }));
@@ -180,11 +169,11 @@ export default function GallerySection() {
           prev.map((work) =>
             work.id === workId
               ? {
-                  ...work,
-                  vote_count: hasVoted
-                    ? work.vote_count + 1
-                    : Math.max(0, work.vote_count - 1),
-                }
+                ...work,
+                vote_count: hasVoted
+                  ? work.vote_count + 1
+                  : Math.max(0, work.vote_count - 1),
+              }
               : work
           )
         );

@@ -59,19 +59,13 @@ export default function MySubmissions() {
         return;
       }
 
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000);
-
       const { data, error } = await supabase
         .from("works_with_votes")
         .select(
           "id,title,status,created_at,review_note,description,author_name,demo_url,image_url,image_urls,vote_count"
         )
         .eq("created_by", userId)
-        .order("created_at", { ascending: false })
-        .abortSignal(controller.signal);
-
-      clearTimeout(timeoutId);
+        .order("created_at", { ascending: false });
 
       if (error) {
         setErrorMessage(error.message);
@@ -80,12 +74,8 @@ export default function MySubmissions() {
 
       setItems(data ?? []);
     } catch (err) {
-      if (err instanceof Error && err.name === "AbortError") {
-        setErrorMessage("載入超時，請重新整理頁面。");
-      } else {
-        const msg = err instanceof Error ? err.message : "載入投稿時發生未知錯誤";
-        setErrorMessage(msg);
-      }
+      const msg = err instanceof Error ? err.message : "載入投稿時發生未知錯誤";
+      setErrorMessage(msg);
     } finally {
       setIsLoading(false);
     }
