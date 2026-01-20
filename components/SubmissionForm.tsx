@@ -144,13 +144,21 @@ export default function SubmissionForm({
     let uploadedImageUrls: string[] = parsedUrls;
     let uploadedImageUrl = uploadedImageUrls[0] || null;
     if (files.length > 0) {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData.session?.access_token;
+      if (!accessToken) {
+        setMessage({ type: "error", text: "登入狀態已過期，請重新登入。" });
+        setIsSubmitting(false);
+        onSubmittingChange?.(false);
+        return;
+      }
       const formData = new FormData();
       files.forEach((item) => formData.append("files", item));
-      if (userId) {
-        formData.append("userId", userId);
-      }
       const uploadResponse = await fetch("/api/upload", {
         method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
         body: formData,
       });
 

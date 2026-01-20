@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Heart } from "lucide-react";
@@ -69,14 +70,24 @@ export default function WorkCard({
       title={demoUrl ? "點擊前往作品連結" : undefined}
     >
       <div className="relative">
-        <div
-          className="aspect-[4/3] w-full rounded-xl bg-cover bg-center"
-          style={{
-            backgroundImage: activeImage
-              ? `url(${activeImage})`
-              : fallbackGradient,
-          }}
-        />
+        <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl">
+          {activeImage ? (
+            <Image
+              src={activeImage}
+              alt={title}
+              fill
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+              className="object-cover"
+              loader={({ src }) => src}
+              unoptimized
+            />
+          ) : (
+            <div
+              className="h-full w-full"
+              style={{ backgroundImage: fallbackGradient }}
+            />
+          )}
+        </div>
         {canSlide && (
           <>
             <button

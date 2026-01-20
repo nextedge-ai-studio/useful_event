@@ -34,29 +34,36 @@ export default function InboxList() {
       setIsLoading(true);
       setErrorMessage(null);
 
-      const { data: sessionData } = await supabase.auth.getSession();
-      const userId = sessionData.session?.user?.id;
+      try {
+        const { data: sessionData } = await supabase.auth.getSession();
+        const userId = sessionData.session?.user?.id;
 
-      if (!userId) {
+        if (!userId) {
+          setIsLoading(false);
+          setErrorMessage("請先登入後查看通知。");
+          return;
+        }
+
+        const { data, error } = await supabase
+          .from("notifications")
+          .select("id,title,body,created_at,read_at")
+          .eq("user_id", userId)
+          .order("created_at", { ascending: false });
+
+        if (error) {
+          setErrorMessage(error.message);
+          setIsLoading(false);
+          return;
+        }
+
+        setItems(data ?? []);
         setIsLoading(false);
-        setErrorMessage("請先登入後查看通知。");
-        return;
-      }
-
-      const { data, error } = await supabase
-        .from("notifications")
-        .select("id,title,body,created_at,read_at")
-        .eq("user_id", userId)
-        .order("created_at", { ascending: false });
-
-      if (error) {
-        setErrorMessage(error.message);
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : "載入通知時發生未知錯誤";
+        setErrorMessage(errorMessage);
         setIsLoading(false);
-        return;
       }
-
-      setItems(data ?? []);
-      setIsLoading(false);
     };
 
     loadNotifications();

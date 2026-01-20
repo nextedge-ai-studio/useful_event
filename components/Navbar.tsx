@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import type { Session } from "@supabase/supabase-js";
 import { useEffect, useRef, useState } from "react";
 import { isSupabaseEnabled, supabase } from "@/lib/supabase/client";
 
@@ -8,7 +9,35 @@ export default function Navbar() {
   const [isLoading, setIsLoading] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [isInAppBrowser, setIsInAppBrowser] = useState(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
+
+  const syncSessionCookie = async (session: Session | null) => {
+    try {
+      if (!session) {
+        await fetch("/api/auth/session", { method: "DELETE" });
+        return;
+      }
+      await fetch("/api/auth/session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          accessToken: session.access_token,
+          expiresIn: session.expires_in,
+        }),
+      });
+    } catch (error) {
+      console.warn("Failed to sync session cookie:", error);
+    }
+  };
+
+  useEffect(() => {
+    const userAgent =
+      typeof navigator === "undefined" ? "" : navigator.userAgent.toLowerCase();
+    setIsInAppBrowser(
+      /line|fbav|fban|instagram|fb_iab|fbios|fb4a/.test(userAgent)
+    );
+  }, []);
 
   useEffect(() => {
     if (!supabase || !isSupabaseEnabled) {
@@ -20,7 +49,9 @@ export default function Navbar() {
         return;
       }
       const { data } = await supabase.auth.getSession();
-      setUserEmail(data.session?.user?.email ?? null);
+      const session = data.session;
+      setUserEmail(session?.user?.email ?? null);
+      await syncSessionCookie(session);
     };
 
     loadUser();
@@ -29,8 +60,9 @@ export default function Navbar() {
       return;
     }
     const { data: authListener } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
+      async (_event, session) => {
         setUserEmail(session?.user?.email ?? null);
+        await syncSessionCookie(session ?? null);
       }
     );
 
@@ -53,6 +85,10 @@ export default function Navbar() {
   const handleGoogleLogin = async () => {
     if (!supabase || !isSupabaseEnabled) {
       console.warn("Supabase is not configured yet.");
+      return;
+    }
+    if (isInAppBrowser) {
+      alert("請使用系統瀏覽器（Chrome/Safari）開啟以完成 Google 登入。");
       return;
     }
     try {
@@ -119,6 +155,7 @@ export default function Navbar() {
                       if (supabase) {
                         await supabase.auth.signOut();
                       }
+                      await fetch("/api/auth/session", { method: "DELETE" });
                       setMenuOpen(false);
                     }}
                     className="mt-1 w-full rounded-xl px-3 py-2 text-left text-slate-700 transition hover:bg-white/70 hover:text-slate-900"
@@ -129,17 +166,24 @@ export default function Navbar() {
               )}
             </div>
           ) : (
-            <button
-              onClick={handleGoogleLogin}
-              disabled={isLoading || !isSupabaseEnabled}
-              className="rounded-full border border-white/40 bg-white/50 px-5 py-2 text-sm font-medium text-slate-900 shadow-sm transition hover:-translate-y-0.5 hover:bg-white/70 disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/30"
-            >
-              {!isSupabaseEnabled
-                ? "尚未設定 Supabase"
-                : isLoading
-                ? "連線中..."
-                : "Google 登入"}
-            </button>
+            <div className="flex flex-col items-end gap-2">
+              <button
+                onClick={handleGoogleLogin}
+                disabled={isLoading || !isSupabaseEnabled}
+                className="rounded-full border border-white/40 bg-white/50 px-5 py-2 text-sm font-medium text-slate-900 shadow-sm transition hover:-translate-y-0.5 hover:bg-white/70 disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/30"
+              >
+                {!isSupabaseEnabled
+                  ? "尚未設定 Supabase"
+                  : isLoading
+                  ? "連線中..."
+                  : "Google 登入"}
+              </button>
+              {isInAppBrowser && (
+                <span className="text-[11px] text-amber-600">
+                  建議用系統瀏覽器開啟以完成登入
+                </span>
+              )}
+            </div>
           )}
         </div>
       </div>
