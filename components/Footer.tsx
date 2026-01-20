@@ -22,6 +22,7 @@ export default function Footer() {
               <p>Email｜usefulvibecode@gmail.com</p>
               <p>Web｜<a href="https://usefulvibecoding.com/" target="_blank" rel="noopener" className="hover:text-sky-500 underline decoration-sky-200">usefulvibecoding.com</a></p>
               <p>Discord｜<a href="https://discord.gg/34fVWX3tsp" target="_blank" rel="noopener" className="hover:text-sky-500 underline decoration-sky-200">點此加入 Discord</a></p>
+              <p>Line｜<a href="https://line.me/ti/g2/FO-LwoDfH0RrlsJ2hylmAyfA04-ZYNQBUWY-ow?utm_source=invitation&utm_medium=link_copy&utm_campaign=default" target="_blank" rel="noopener" className="hover:text-sky-500 underline decoration-sky-200">點此加入 LINE 社群</a></p>
             </div>
           </div>
 
