@@ -67,7 +67,6 @@ export default function Footer() {
           <span>© 2026 Sky Pegasus. All rights reserved.</span>
           <div className="flex items-center gap-4">
             <a href="/gallery" className="hover:text-slate-900 transition underline underline-offset-4 decoration-slate-200">作品牆</a>
-            <a href="/submit" className="hover:text-slate-900 transition underline underline-offset-4 decoration-slate-200">我要投稿</a>
             <span className="text-slate-300">|</span>
             <a
               href="https://www.nextedge-ai-studio.com/"
