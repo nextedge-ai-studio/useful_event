@@ -56,13 +56,13 @@ export default function WorkDetailModal({
             </div>
           ) : hasImages ? (
             <div className="relative">
-              <div className="relative aspect-video w-full overflow-hidden rounded-xl">
+              <div className="relative aspect-video w-full overflow-hidden rounded-xl bg-slate-100/50">
                 <Image
                   src={work.imageUrls[activeIndex]}
                   alt={`${work.title} - 圖片 ${activeIndex + 1}`}
                   fill
                   sizes="(max-width: 768px) 100vw, 800px"
-                  className="object-cover"
+                  className="object-contain"
                   loader={({ src }) => src}
                   unoptimized
                 />
