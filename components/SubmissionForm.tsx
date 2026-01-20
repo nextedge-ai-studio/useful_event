@@ -28,6 +28,7 @@ export default function SubmissionForm({
   const [description, setDescription] = useState("");
   const [imageUrlsText, setImageUrlsText] = useState("");
   const [demoUrl, setDemoUrl] = useState("");
+  const [youtubeUrl, setYoutubeUrl] = useState("");
   const [files, setFiles] = useState<File[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -181,13 +182,14 @@ export default function SubmissionForm({
     const { data: workData, error } = await supabase
       .from("works")
       .insert({
-      title,
-      author_name: authorName,
-      description,
+        title,
+        author_name: authorName,
+        description,
         image_url: uploadedImageUrl,
         image_urls: uploadedImageUrls,
-      demo_url: demoUrl || null,
-      created_by: userId,
+        youtube_url: youtubeUrl || null,
+        demo_url: demoUrl || null,
+        created_by: userId,
       })
       .select("id");
 
@@ -211,6 +213,7 @@ export default function SubmissionForm({
     setDescription("");
     setImageUrlsText("");
     setDemoUrl("");
+    setYoutubeUrl("");
     setFiles([]);
     setMessage({ type: "success", text: "投稿成功，等待審核。" });
     setIsSubmitting(false);
@@ -255,6 +258,16 @@ export default function SubmissionForm({
           placeholder="https://..."
           value={demoUrl}
           onChange={(event) => setDemoUrl(event.target.value)}
+          className="w-full rounded-xl border border-white/40 bg-white/60 px-4 py-2 text-slate-900 shadow-sm outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-200"
+        />
+      </label>
+      <label className="space-y-2 text-sm font-medium text-slate-700">
+        YouTube 影片連結（選填）
+        <input
+          type="url"
+          placeholder="https://www.youtube.com/watch?v=..."
+          value={youtubeUrl}
+          onChange={(event) => setYoutubeUrl(event.target.value)}
           className="w-full rounded-xl border border-white/40 bg-white/60 px-4 py-2 text-slate-900 shadow-sm outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-200"
         />
       </label>
@@ -363,11 +376,10 @@ export default function SubmissionForm({
                       key={`preview-${index}`}
                       type="button"
                       onClick={() => setActivePreview(index)}
-                      className={`h-1.5 w-5 rounded-full transition ${
-                        index === activePreview
-                          ? "bg-slate-500"
-                          : "bg-slate-300"
-                      }`}
+                      className={`h-1.5 w-5 rounded-full transition ${index === activePreview
+                        ? "bg-slate-500"
+                        : "bg-slate-300"
+                        }`}
                     />
                   ))}
                 </div>
@@ -417,11 +429,10 @@ export default function SubmissionForm({
       </div>
       {message && (
         <div
-          className={`rounded-2xl border px-4 py-3 text-sm ${
-            message.type === "success"
-              ? "border-emerald-200 bg-emerald-50/80 text-emerald-700"
-              : "border-amber-200 bg-amber-50/80 text-amber-700"
-          }`}
+          className={`rounded-2xl border px-4 py-3 text-sm ${message.type === "success"
+            ? "border-emerald-200 bg-emerald-50/80 text-emerald-700"
+            : "border-amber-200 bg-amber-50/80 text-amber-700"
+            }`}
         >
           {message.text}
         </div>

@@ -9,6 +9,7 @@ type Work = {
   hasVoted: boolean;
   imageUrl?: string | null;
   imageUrls?: string[];
+  youtubeUrl?: string | null;
   demoUrl?: string | null;
   gradient?: string;
   onVote?: (id: string) => void;

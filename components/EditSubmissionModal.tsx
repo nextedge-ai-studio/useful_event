@@ -20,6 +20,7 @@ type SubmissionData = {
   author_name: string;
   description: string;
   demo_url: string | null;
+  youtube_url: string | null;
   image_url: string | null;
   image_urls: string[] | null;
 };
@@ -43,12 +44,13 @@ export default function EditSubmissionModal({
   const [authorName, setAuthorName] = useState(work.author_name);
   const [description, setDescription] = useState(work.description);
   const [demoUrl, setDemoUrl] = useState(work.demo_url ?? "");
+  const [youtubeUrl, setYoutubeUrl] = useState(work.youtube_url ?? "");
   const [imageUrlsText, setImageUrlsText] = useState(
     (work.image_urls && work.image_urls.length > 0
       ? work.image_urls
       : work.image_url
-      ? [work.image_url]
-      : []
+        ? [work.image_url]
+        : []
     ).join("\n")
   );
   const [files, setFiles] = useState<File[]>([]);
@@ -160,6 +162,7 @@ export default function EditSubmissionModal({
         author_name: authorName,
         description,
         demo_url: demoUrl || null,
+        youtube_url: youtubeUrl || null,
         image_url: uploadedImageUrl,
         image_urls: uploadedImageUrls,
         status: "pending",
@@ -223,6 +226,16 @@ export default function EditSubmissionModal({
               placeholder="https://..."
               value={demoUrl}
               onChange={(event) => setDemoUrl(event.target.value)}
+              className="w-full rounded-xl border border-white/40 bg-white/60 px-4 py-2 text-slate-900 shadow-sm outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-200"
+            />
+          </label>
+          <label className="space-y-2 text-sm font-medium text-slate-700">
+            YouTube 影片連結（選填）
+            <input
+              type="url"
+              placeholder="https://www.youtube.com/watch?v=..."
+              value={youtubeUrl}
+              onChange={(event) => setYoutubeUrl(event.target.value)}
               className="w-full rounded-xl border border-white/40 bg-white/60 px-4 py-2 text-slate-900 shadow-sm outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-200"
             />
           </label>
@@ -330,11 +343,10 @@ export default function EditSubmissionModal({
                           key={`preview-${index}`}
                           type="button"
                           onClick={() => setActivePreview(index)}
-                          className={`h-1.5 w-5 rounded-full transition ${
-                            index === activePreview
+                          className={`h-1.5 w-5 rounded-full transition ${index === activePreview
                               ? "bg-slate-500"
                               : "bg-slate-300"
-                          }`}
+                            }`}
                         />
                       ))}
                     </div>
@@ -384,11 +396,10 @@ export default function EditSubmissionModal({
           </div>
           {message && (
             <div
-              className={`rounded-2xl border px-4 py-3 text-sm ${
-                message.type === "success"
+              className={`rounded-2xl border px-4 py-3 text-sm ${message.type === "success"
                   ? "border-emerald-200 bg-emerald-50/80 text-emerald-700"
                   : "border-amber-200 bg-amber-50/80 text-amber-700"
-              }`}
+                }`}
             >
               {message.text}
             </div>

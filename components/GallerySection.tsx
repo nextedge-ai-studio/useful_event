@@ -12,6 +12,7 @@ type WorkRow = {
   description: string;
   image_url: string | null;
   image_urls: string[] | null;
+  youtube_url: string | null;
   demo_url: string | null;
   status: string;
   created_at: string;
@@ -55,7 +56,7 @@ export default function GallerySection() {
         const { data, error } = await supabase
           .from("works_with_votes")
           .select(
-            "id,title,author_name,description,image_url,image_urls,demo_url,status,created_at,vote_count"
+            "id,title,author_name,description,image_url,image_urls,youtube_url,demo_url,status,created_at,vote_count"
           )
           .eq("status", "approved")
           .order("created_at", { ascending: false });
@@ -204,6 +205,7 @@ export default function GallerySection() {
         hasVoted: Boolean(voteMap[work.id]),
         imageUrl: work.image_url,
         imageUrls: work.image_urls ?? [],
+        youtubeUrl: work.youtube_url,
         demoUrl: work.demo_url,
         gradient: fallbackGradients[index % fallbackGradients.length],
         onVote: handleVote,

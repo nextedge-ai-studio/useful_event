@@ -15,6 +15,7 @@ type SubmissionRow = {
   description: string;
   author_name: string;
   demo_url: string | null;
+  youtube_url: string | null;
   image_url: string | null;
   image_urls: string[] | null;
   vote_count: number;
@@ -62,7 +63,7 @@ export default function MySubmissions() {
       const { data, error } = await supabase
         .from("works_with_votes")
         .select(
-          "id,title,status,created_at,review_note,description,author_name,demo_url,image_url,image_urls,vote_count"
+          "id,title,status,created_at,review_note,description,author_name,demo_url,youtube_url,image_url,image_urls,vote_count"
         )
         .eq("created_by", userId)
         .order("created_at", { ascending: false });
@@ -162,6 +163,7 @@ export default function MySubmissions() {
                   author_name: item.author_name,
                   description: item.description,
                   demo_url: item.demo_url,
+                  youtube_url: item.youtube_url,
                   image_url: item.image_url,
                   image_urls: item.image_urls,
                 }}
