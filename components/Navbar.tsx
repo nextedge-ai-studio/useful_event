@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import type { Session } from "@supabase/supabase-js";
 import { useEffect, useRef, useState } from "react";
 import { isSupabaseEnabled, supabase } from "@/lib/supabase/client";
@@ -124,13 +125,15 @@ export default function Navbar() {
   return (
     <header className="fixed left-0 right-0 top-0 z-40 border-b border-white/20 bg-white/50 supports-[backdrop-filter]:bg-white/40 supports-[backdrop-filter]:backdrop-blur-md">
       <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-6">
-        <Link href="/" className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-sky-400/70 via-sky-300/60 to-blue-500/70 text-white shadow-blue-soft">
-            ✦
+        <Link href="/" className="flex items-center">
+          <div className="relative h-10 w-28 overflow-hidden">
+            <Image
+              src="/logo.svg"
+              alt="Sky Pegasus Logo"
+              fill
+              className="object-contain"
+            />
           </div>
-          <span className="font-serif text-lg tracking-wide text-slate-900">
-            Sky Pegasus
-          </span>
         </Link>
         <div className="flex items-center gap-4">
           <Link

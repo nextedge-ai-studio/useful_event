@@ -9,7 +9,7 @@ export default function Footer() {
           <div className="space-y-4">
             <p className="text-xs uppercase tracking-[0.3em] text-slate-500 font-bold">主辦單位</p>
             <div className="flex items-center gap-3">
-              <div className="relative h-12 w-12 overflow-hidden rounded-full border border-white/40 bg-white/50 shadow-sm">
+              <div className="relative h-12 w-32 overflow-hidden rounded-lg border border-white/40 bg-white/50 shadow-sm">
                 <Image
                   src="/logo.svg"
                   alt="Sky Pegasus Logo"
@@ -17,9 +17,6 @@ export default function Footer() {
                   className="object-contain p-2"
                 />
               </div>
-              <span className="font-serif text-lg tracking-wide text-slate-900">
-                Sky Pegasus
-              </span>
             </div>
             <div className="grid gap-1.5 text-sm text-slate-600">
               <p>Email｜usefulvibecode@gmail.com</p>
