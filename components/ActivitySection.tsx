@@ -72,12 +72,6 @@ const judges = [
     description: "敬請期待",
     image: null,
   },
-  {
-    name: "評審邀請中",
-    title: "神秘嘉賓",
-    description: "敬請期待",
-    image: null,
-  },
 ];
 
 type Tab = "activity" | "judges" | "qna";
