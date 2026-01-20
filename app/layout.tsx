@@ -54,6 +54,11 @@ export const metadata: Metadata = {
       "Sky Pegasus 天馬行空 2026 Vibe Coding 投稿活動官方網站。查看活動時程、投稿規則、評選方式與精選作品，邀請所有創作者分享天馬行空的靈感。",
     images: ["/hourse.png"],
   },
+  icons: {
+    icon: "/logo.svg",
+    shortcut: "/logo.svg",
+    apple: "/logo.svg",
+  },
 };
 
 export default function RootLayout({
