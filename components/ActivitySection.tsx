@@ -74,6 +74,13 @@ const judges = [
     image: "/judge-andrew.png",
     link: "https://sites.google.com/view/andrewshih-resume/",
   },
+  {
+    name: "憲毅 Ryan",
+    title: "特邀評審",
+    description: "點擊查看詳細介紹",
+    image: "/judge-ryan.jpg",
+    link: "https://www.threads.com/@ryan_ryan_lin",
+  },
 ];
 
 type Tab = "activity" | "judges" | "qna";
