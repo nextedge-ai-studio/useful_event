@@ -7,7 +7,7 @@ export default function Footer() {
         <div className="grid gap-10 md:grid-cols-3">
           {/* 主辦單位 */}
           <div className="space-y-4">
-            <p className="text-xs uppercase tracking-[0.3em] text-slate-500 font-bold">Useful Vibecode｜AI 共學社群</p>
+            <p className="text-xs uppercase tracking-[0.3em] text-slate-500 font-bold">主辦單位</p>
             <div className="flex items-center gap-3">
               <div className="relative h-12 w-32 overflow-hidden rounded-lg border border-white/40 bg-white/50 shadow-sm">
                 <Image
@@ -19,6 +19,7 @@ export default function Footer() {
               </div>
             </div>
             <div className="grid gap-1.5 text-sm text-slate-600">
+              <p className="font-bold">Useful Vibecode｜AI 共學社群</p>
               <p>Email｜usefulvibecode@gmail.com</p>
               <p>Web｜<a href="https://usefulvibecoding.com/" target="_blank" rel="noopener" className="hover:text-sky-500 underline decoration-sky-200">usefulvibecoding.com</a></p>
               <p>Discord｜<a href="https://discord.gg/34fVWX3tsp" target="_blank" rel="noopener" className="hover:text-sky-500 underline decoration-sky-200">點此加入 Discord</a></p>
@@ -49,7 +50,7 @@ export default function Footer() {
 
           {/* 協辦單位 2 */}
           <div className="space-y-4">
-            <p className="text-xs uppercase tracking-[0.3em] text-slate-500 font-bold">NextEdge AI Studio</p>
+            <p className="text-xs uppercase tracking-[0.3em] text-slate-500 font-bold">協辦單位 2</p>
             <div className="flex items-center gap-3">
               <div className="relative h-12 w-32 overflow-hidden rounded-lg bg-white/30 p-1">
                 <Image
@@ -61,6 +62,7 @@ export default function Footer() {
               </div>
             </div>
             <div className="grid gap-1.5 text-sm text-slate-600">
+              <p className="font-bold">NextEdge AI Studio</p>
               <p>網頁｜<a href="https://www.nextedge-ai-studio.com/" target="_blank" rel="noopener" className="hover:text-sky-500 underline decoration-sky-200">nextedge-ai-studio.com</a></p>
               <p>Line｜<a href="https://page.line.me/663uegpw" target="_blank" rel="noopener" className="hover:text-sky-500 underline decoration-sky-200">@663uegpw</a></p>
             </div>
