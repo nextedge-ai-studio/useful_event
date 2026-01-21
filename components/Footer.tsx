@@ -26,21 +26,24 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* 協辦單位 1 */}
           <div className="space-y-4">
             <p className="text-xs uppercase tracking-[0.3em] text-slate-500 font-bold">協辦單位 1</p>
             <div className="flex items-center gap-3">
-              <div className="relative h-12 w-24 overflow-hidden rounded-lg bg-white/30 p-1">
+              <div className="relative h-12 w-32 overflow-hidden rounded-lg bg-white/30 p-1">
                 <Image
                   src="/partner-1.png"
-                  alt="Partner 1 Logo"
+                  alt="VibeCoding Community Logo"
                   fill
                   className="object-contain"
                 />
               </div>
             </div>
-            <div className="grid gap-1.5 text-sm text-slate-600 italic">
-              資訊待補充
+            <div className="grid gap-1.5 text-sm text-slate-600">
+              <p className="font-bold">VibeCoding 陪伴式小聚社群</p>
+              <p>網頁｜<a href="https://vibecoding-community.zeabur.app/" target="_blank" rel="noopener" className="hover:text-sky-500 underline decoration-sky-200">vibecoding-community.zeabur.app</a></p>
+              <p>Email｜ceceloveye@gmail.com</p>
+              <p>Threads｜<a href="https://www.threads.com/@cecelove1209" target="_blank" rel="noopener" className="hover:text-sky-500 underline decoration-sky-200">@cecelove1209</a></p>
+              <p>社群｜<a href="https://reurl.cc/pK0pOQ" target="_blank" rel="noopener" className="hover:text-sky-500 underline decoration-sky-200">點此加入陪伴式小聚</a></p>
             </div>
           </div>
 
