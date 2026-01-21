@@ -108,16 +108,16 @@ export default function Navbar() {
     try {
       setIsLoading(true);
 
-      // 取得當前頁面路徑，用於登入後跳轉
-      const currentPath =
-        typeof window !== "undefined" ? window.location.pathname : "/";
-      const callbackUrl = new URL(
-        "/auth/callback",
-        typeof window !== "undefined" ? window.location.origin : undefined
-      );
-      // 如果不是首頁，儲存原本的路徑
-      if (currentPath !== "/") {
-        callbackUrl.searchParams.set("redirectedFrom", currentPath);
+      // 優先從 URL query params 讀取 redirectedFrom（當用戶被 middleware redirect 時）
+      // 否則使用當前路徑
+      const urlParams = new URLSearchParams(window.location.search);
+      const redirectedFrom = urlParams.get("redirectedFrom");
+      const targetPath =
+        redirectedFrom || (window.location.pathname !== "/" ? window.location.pathname : null);
+
+      const callbackUrl = new URL("/auth/callback", window.location.origin);
+      if (targetPath) {
+        callbackUrl.searchParams.set("redirectedFrom", targetPath);
       }
 
       const { error } = await supabase.auth.signInWithOAuth({

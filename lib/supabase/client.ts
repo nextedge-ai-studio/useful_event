@@ -10,6 +10,7 @@ export const supabase =
         persistSession: true,
         autoRefreshToken: true,
         detectSessionInUrl: true,
+        flowType: 'pkce',
       },
       realtime: {
         params: {
