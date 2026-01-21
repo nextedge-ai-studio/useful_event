@@ -7,7 +7,7 @@ export default function Footer() {
         <div className="grid gap-10 md:grid-cols-3">
           {/* 主辦單位 */}
           <div className="space-y-4">
-            <p className="text-xs uppercase tracking-[0.3em] text-slate-500 font-bold">主辦單位</p>
+            <p className="text-xs uppercase tracking-[0.3em] text-slate-500 font-bold">Useful Vibecode｜AI 共學社群</p>
             <div className="flex items-center gap-3">
               <div className="relative h-12 w-32 overflow-hidden rounded-lg border border-white/40 bg-white/50 shadow-sm">
                 <Image
@@ -49,7 +49,7 @@ export default function Footer() {
 
           {/* 協辦單位 2 */}
           <div className="space-y-4">
-            <p className="text-xs uppercase tracking-[0.3em] text-slate-500 font-bold">協辦單位 2</p>
+            <p className="text-xs uppercase tracking-[0.3em] text-slate-500 font-bold">NextEdge AI Studio</p>
             <div className="flex items-center gap-3">
               <div className="relative h-12 w-32 overflow-hidden rounded-lg bg-white/30 p-1">
                 <Image
