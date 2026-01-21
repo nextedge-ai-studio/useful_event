@@ -36,6 +36,7 @@ export default function SubmissionForm({
   const [canSubmit, setCanSubmit] = useState(true);
   const [activePreview, setActivePreview] = useState(0);
   const [newImageUrl, setNewImageUrl] = useState("");
+  const [isDragging, setIsDragging] = useState(false);
 
   const previewUrls = useMemo(() => {
     const urlPreviews = imageUrlsText
@@ -285,13 +286,47 @@ export default function SubmissionForm({
         <p className="text-sm font-medium text-slate-700">作品圖片（可多張）</p>
         <div className="rounded-2xl border border-white/30 bg-white/60 p-4 shadow-blue-soft supports-[backdrop-filter]:bg-white/50 supports-[backdrop-filter]:backdrop-blur-md">
           {previewUrls.length === 0 ? (
-            <label className="flex w-full cursor-pointer flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-white/50 bg-white/50 px-4 py-8 text-center text-sm text-slate-600 transition hover:border-sky-300 sm:px-6">
+            <label
+              className={`flex w-full cursor-pointer flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed px-4 py-8 text-center text-sm text-slate-600 transition ${isDragging
+                  ? "border-sky-400 bg-sky-50/50"
+                  : "border-white/50 bg-white/50 hover:border-sky-300"
+                }`}
+              onDragOver={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setIsDragging(true);
+              }}
+              onDragEnter={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setIsDragging(true);
+              }}
+              onDragLeave={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setIsDragging(false);
+              }}
+              onDrop={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setIsDragging(false);
+                const droppedFiles = e.dataTransfer.files;
+                if (droppedFiles && droppedFiles.length > 0) {
+                  const imageFiles = Array.from(droppedFiles).filter((f) =>
+                    f.type.startsWith("image/")
+                  );
+                  if (imageFiles.length > 0) {
+                    setFiles(imageFiles);
+                  }
+                }
+              }}
+            >
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/70 text-sky-500 shadow-sm">
                 <span className="text-lg">⬆</span>
               </div>
               <div className="space-y-1">
                 <p className="font-medium text-slate-700">
-                  拖放圖片到這裡，或點擊上傳
+                  {isDragging ? "放開以上傳圖片" : "拖放圖片到這裡，或點擊上傳"}
                 </p>
                 <p className="text-xs text-slate-500">
                   支援 PNG / JPG，建議 1200px 以上
