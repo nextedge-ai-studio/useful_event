@@ -24,22 +24,31 @@ export default function InboxList() {
       return;
     }
 
+    let isMounted = true;
+
     const loadNotifications = async () => {
       if (!supabase || !isSupabaseEnabled) {
-        setIsLoading(false);
-        setErrorMessage("Supabase 尚未設定，無法載入通知。");
+        if (isMounted) {
+          setIsLoading(false);
+          setErrorMessage("Supabase 尚未設定，無法載入通知。");
+        }
         return;
       }
 
-      setIsLoading(true);
-      setErrorMessage(null);
+      if (isMounted) {
+        setIsLoading(true);
+        setErrorMessage(null);
+      }
 
       try {
         const { data: sessionData } = await supabase.auth.getSession();
         const userId = sessionData.session?.user?.id;
 
         if (!userId) {
-          setErrorMessage("請先登入後查看通知。");
+          if (isMounted) {
+            setItems([]);
+            setErrorMessage("請先登入後查看通知。");
+          }
           return;
         }
 
@@ -49,6 +58,8 @@ export default function InboxList() {
           .eq("user_id", userId)
           .order("created_at", { ascending: false });
 
+        if (!isMounted) return;
+
         if (error) {
           setErrorMessage(error.message);
           return;
@@ -56,15 +67,33 @@ export default function InboxList() {
 
         setItems(data ?? []);
       } catch (err) {
+        if (!isMounted) return;
         const msg =
           err instanceof Error ? err.message : "載入通知時發生未知錯誤";
         setErrorMessage(msg);
       } finally {
-        setIsLoading(false);
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
     };
 
+    // 初次載入
     loadNotifications();
+
+    // 監聽登入狀態變化，登入後自動重新載入通知
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        if (!isMounted) return;
+        // 當登入狀態改變時重新載入通知
+        loadNotifications();
+      }
+    );
+
+    return () => {
+      isMounted = false;
+      authListener.subscription.unsubscribe();
+    };
   }, []);
 
   if (isLoading) {
