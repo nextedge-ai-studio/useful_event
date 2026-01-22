@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { isSupabaseEnabled, supabase } from "@/lib/supabase/client";
+import { useSubmissionDeadline } from "@/lib/hooks/useSubmissionDeadline";
 
 type SubmissionFormProps = {
   variant?: "page" | "modal";
@@ -37,6 +38,7 @@ export default function SubmissionForm({
   const [activePreview, setActivePreview] = useState(0);
   const [newImageUrl, setNewImageUrl] = useState("");
   const [isDragging, setIsDragging] = useState(false);
+  const isEnded = useSubmissionDeadline();
 
   const previewUrls = useMemo(() => {
     const urlPreviews = imageUrlsText
@@ -116,6 +118,11 @@ export default function SubmissionForm({
       return;
     }
 
+    if (isEnded) {
+      setMessage({ type: "error", text: "投稿活動已截止，無法再進行投稿。" });
+      return;
+    }
+
     if (!userId) {
       setMessage({ type: "error", text: "請先登入後再投稿。" });
       return;
@@ -180,9 +187,24 @@ export default function SubmissionForm({
       uploadedImageUrl = uploadedImageUrls[0] || null;
     }
 
-    const { data: workData, error } = await supabase
-      .from("works")
-      .insert({
+    // 改為呼叫 API 進行投稿
+    const { data: sessionData } = await supabase.auth.getSession();
+    const accessToken = sessionData.session?.access_token;
+
+    if (!accessToken) {
+      setMessage({ type: "error", text: "登入狀態已過期，請重新登入。" });
+      setIsSubmitting(false);
+      onSubmittingChange?.(false);
+      return;
+    }
+
+    const response = await fetch("/api/works/submit", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify({
         title,
         author_name: authorName,
         description,
@@ -190,23 +212,16 @@ export default function SubmissionForm({
         image_urls: uploadedImageUrls,
         youtube_url: youtubeUrl || null,
         demo_url: demoUrl || null,
-        created_by: userId,
-      })
-      .select("id");
+      }),
+    });
 
-    if (error) {
-      setMessage({ type: "error", text: error.message });
+    const result = await response.json();
+
+    if (!response.ok) {
+      setMessage({ type: "error", text: result.error || "投稿失敗" });
       setIsSubmitting(false);
       onSubmittingChange?.(false);
       return;
-    }
-
-    if (workData && workData[0]?.id) {
-      await supabase.from("notifications").insert({
-        user_id: userId,
-        title: "投稿成功",
-        body: "你的作品已送出，正在等待審核。",
-      });
     }
 
     setTitle("");
@@ -288,8 +303,8 @@ export default function SubmissionForm({
           {previewUrls.length === 0 ? (
             <label
               className={`flex w-full cursor-pointer flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed px-4 py-8 text-center text-sm text-slate-600 transition ${isDragging
-                  ? "border-sky-400 bg-sky-50/50"
-                  : "border-white/50 bg-white/50 hover:border-sky-300"
+                ? "border-sky-400 bg-sky-50/50"
+                : "border-white/50 bg-white/50 hover:border-sky-300"
                 }`}
               onDragOver={(e) => {
                 e.preventDefault();
@@ -482,10 +497,15 @@ export default function SubmissionForm({
           </button>
           <button
             type="submit"
-            disabled={isSubmitting || !isSupabaseEnabled || !canSubmit}
+            disabled={isSubmitting || !isSupabaseEnabled || !canSubmit || isEnded}
             className="rounded-full bg-gradient-to-r from-sky-500 to-blue-600 px-6 py-2 text-sm font-semibold text-white shadow-blue-soft transition hover:-translate-y-0.5 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/30"
           >
-            {isSubmitting ? "送出中..." : "送出投稿"}
+            {isEnded
+              ? "活動已截止"
+              : isSubmitting
+                ? "送出中..."
+                : "送出投稿"
+            }
           </button>
         </div>
       )}
