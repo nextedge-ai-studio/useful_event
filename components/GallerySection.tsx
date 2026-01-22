@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import GalleryGrid from "@/components/GalleryGrid";
 import { isSupabaseEnabled, supabase } from "@/lib/supabase/client";
+import { useSubmissionDeadline } from "@/lib/hooks/useSubmissionDeadline";
 
 type WorkRow = {
   id: string;
@@ -35,6 +36,7 @@ export default function GallerySection() {
   const [pendingVotes, setPendingVotes] = useState<Record<string, boolean>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const isEnded = useSubmissionDeadline();
 
 
 
@@ -129,6 +131,11 @@ export default function GallerySection() {
         return;
       }
 
+      if (isEnded) {
+        setErrorMessage("投票活動已截止，無法再進行投票。");
+        return;
+      }
+
       const hasVoted = Boolean(voteMap[workId]);
 
       setPendingVotes((prev) => ({ ...prev, [workId]: true }));
@@ -146,19 +153,14 @@ export default function GallerySection() {
         )
       );
 
-      const { data, error } = hasVoted
-        ? await supabase
-          .from("votes")
-          .delete()
-          .eq("work_id", workId)
-          .eq("user_id", userId)
-          .select("id")
-        : await supabase
-          .from("votes")
-          .insert({ work_id: workId, user_id: userId })
-          .select("id");
+      // 改為呼叫 API 進行投票
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData.session?.access_token;
 
-      if (error) {
+      if (!accessToken) {
+        setErrorMessage("登入狀態已過期，請重新登入。");
+        setPendingVotes((prev) => ({ ...prev, [workId]: false }));
+        // 回滾樂觀更新
         setVoteMap((prev) => ({ ...prev, [workId]: hasVoted }));
         setWorks((prev) =>
           prev.map((work) =>
@@ -172,22 +174,50 @@ export default function GallerySection() {
               : work
           )
         );
-        setErrorMessage(error.message);
-      } else {
-        if (hasVoted && (!data || data.length === 0)) {
-          setErrorMessage("取消投票失敗，請稍後再試。");
+        return;
+      }
+
+      try {
+        const response = await fetch("/api/vote", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({ workId }),
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(result.error || "投票失敗");
         }
-        const { count, error: countError } = await supabase
-          .from("votes")
-          .select("id", { count: "exact", head: true })
-          .eq("work_id", workId);
-        if (!countError && typeof count === "number") {
-          setWorks((prev) =>
-            prev.map((work) =>
-              work.id === workId ? { ...work, vote_count: count } : work
-            )
-          );
-        }
+
+        // 使用伺服器回傳的正確票數更新
+        setWorks((prev) =>
+          prev.map((work) =>
+            work.id === workId ? { ...work, vote_count: result.voteCount } : work
+          )
+        );
+        // 確認狀態同步
+        setVoteMap((prev) => ({ ...prev, [workId]: result.isVoted }));
+
+      } catch (err: any) {
+        setErrorMessage(err.message);
+        // 回滾樂觀更新
+        setVoteMap((prev) => ({ ...prev, [workId]: hasVoted }));
+        setWorks((prev) =>
+          prev.map((work) =>
+            work.id === workId
+              ? {
+                ...work,
+                vote_count: hasVoted
+                  ? work.vote_count + 1
+                  : Math.max(0, work.vote_count - 1),
+              }
+              : work
+          )
+        );
       }
       setPendingVotes((prev) => ({ ...prev, [workId]: false }));
     },
@@ -209,9 +239,9 @@ export default function GallerySection() {
         demoUrl: work.demo_url,
         gradient: fallbackGradients[index % fallbackGradients.length],
         onVote: handleVote,
-        votingDisabled: !isSupabaseEnabled || Boolean(pendingVotes[work.id]),
+        votingDisabled: !isSupabaseEnabled || Boolean(pendingVotes[work.id]) || isEnded,
       })),
-    [works, voteMap, handleVote, pendingVotes]
+    [works, voteMap, handleVote, pendingVotes, isEnded]
   );
 
   return (
