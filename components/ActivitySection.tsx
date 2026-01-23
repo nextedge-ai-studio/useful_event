@@ -98,7 +98,7 @@ export default function ActivitySection() {
               Activity
             </p>
             <h2 className="font-serif text-3xl text-slate-900 sm:text-4xl">
-              2026 過年節慶活動｜Vibe Coding 投稿活動
+              2026 第一屆飛馬獎｜Vibe Coding 投稿競賽
             </h2>
             <div className="mt-8 grid grid-cols-3 gap-2 sm:flex sm:gap-3 bg-slate-100/50 p-1.5 sm:p-2 rounded-full w-full sm:w-fit mx-auto sm:mx-0 border border-white/60 shadow-inner">
               {[
