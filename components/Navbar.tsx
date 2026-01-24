@@ -127,7 +127,7 @@ export default function Navbar() {
         <Link href="/" className="flex items-center">
           <div className="relative h-10 w-28 overflow-hidden">
             <Image
-              src="/logo.png"
+              src="/logo1.png"
               alt="Sky Pegasus Logo"
               fill
               className="object-contain"
