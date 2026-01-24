@@ -63,6 +63,21 @@ const judges = [
   {
     name: "Raven",
     title: "特邀評審",
+    bio: (
+      <div className="text-sm text-slate-600 mb-2 leading-relaxed text-left">
+        嗨，我是 Raven，目前在台北的某科學機構任職系統工程師，並在業餘時間經營「
+        <a
+          href="https://newsletters.raven.tw/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-sky-600 underline hover:text-sky-500 relative z-10"
+          onClick={(e) => e.stopPropagation()}
+        >
+          Raven AI 週報
+        </a>
+        」。
+      </div>
+    ),
     description: "點擊查看詳細介紹",
     image: "/judge-raven.jpg",
     link: "https://iamraven.notion.site/Raven-2ee021a1715c80f0814afd1c3bb70040",
@@ -70,6 +85,11 @@ const judges = [
   {
     name: "Andrew Shih",
     title: "特邀評審",
+    bio: (
+      <div className="text-sm text-slate-600 mb-2 leading-relaxed text-left">
+        擁有國立臺中教育大學數位內容科技學系碩士學位，現為同校教育資訊與測驗統計研究所博士生。
+      </div>
+    ),
     description: "點擊查看詳細介紹",
     image: "/judge-andrew.png",
     link: "https://sites.google.com/view/andrewshih-resume/",
@@ -77,6 +97,13 @@ const judges = [
   {
     name: "憲毅 Ryan",
     title: "特邀評審",
+    bio: (
+      <div className="text-sm text-slate-600 mb-2 leading-relaxed text-center">
+        行銷人沙龍—創辦人<br />
+        Linote 來記—開發者<br />
+        陪你成為頂尖行銷人才的品牌
+      </div>
+    ),
     description: "點擊查看詳細介紹",
     image: "/judge-ryan.jpg",
     link: "https://www.threads.com/@ryan_ryan_lin",
@@ -170,7 +197,6 @@ export default function ActivitySection() {
                           <p className="text-sm font-semibold text-slate-700">創作主題：天馬行空</p>
                           <p className="text-sm text-slate-500 italic pb-1">創作方向（不限於以下）：</p>
                           <ul className="grid gap-2 text-sm text-slate-600">
-                            <li className="flex gap-2"><span>✦</span> 與「馬、馬年、奔跑、自由、想像力」相關的創意概念</li>
                             <li className="flex gap-2"><span>✦</span> 有趣的使用流程、互動體驗或產品體驗設計</li>
                             <li className="flex gap-2"><span>✦</span> 能清楚說明創作動機與流程邏輯的作品或故事</li>
                           </ul>
@@ -289,6 +315,7 @@ export default function ActivitySection() {
                         <div className="text-center space-y-2">
                           <h4 className="text-lg font-bold text-slate-900 group-hover:text-blue-600 transition-colors">{judge.name}</h4>
                           <p className="text-sm font-medium text-sky-600">{judge.title}</p>
+                          {judge.bio}
                           <p className="text-sm text-slate-500 leading-relaxed">
                             {judge.description}
                           </p>
@@ -296,20 +323,16 @@ export default function ActivitySection() {
                       </>
                     );
 
-                    return judge.link ? (
-                      <a
-                        key={index}
-                        href={judge.link}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="group relative overflow-hidden rounded-3xl border border-white/40 bg-white/50 p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-md block cursor-pointer"
-                      >
-                        {CardContent}
-                      </a>
-                    ) : (
+                    return (
                       <div
                         key={index}
-                        className="group relative overflow-hidden rounded-3xl border border-white/40 bg-white/50 p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-md"
+                        onClick={() => {
+                          if (judge.link) {
+                            window.open(judge.link, "_blank", "noopener,noreferrer");
+                          }
+                        }}
+                        className={`group relative overflow-hidden rounded-3xl border border-white/40 bg-white/50 p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-md ${judge.link ? "cursor-pointer" : ""
+                          }`}
                       >
                         {CardContent}
                       </div>

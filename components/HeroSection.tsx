@@ -4,7 +4,11 @@ import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
 import SubmissionModal from "@/components/SubmissionModal";
 
-export default function HeroSection() {
+export default function HeroSection({
+  submissionCount,
+}: {
+  submissionCount?: number;
+}) {
   const reduceMotion = useReducedMotion();
 
   return (
@@ -42,6 +46,16 @@ export default function HeroSection() {
               欣賞作品 (Gallery)
             </Link>
           </div>
+          {typeof submissionCount === "number" && (
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.5, duration: 0.8 }}
+              className="mt-6 text-sm font-medium text-slate-500"
+            >
+              ✨ 目前已有 <span className="font-bold text-sky-600">{submissionCount}</span> 件創意作品參賽
+            </motion.p>
+          )}
         </motion.div>
       </div>
     </section>
