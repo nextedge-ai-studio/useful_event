@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { isSupabaseEnabled, supabase } from "@/lib/supabase/client";
 import { useSubmissionDeadline } from "@/lib/hooks/useSubmissionDeadline";
 
@@ -75,16 +75,31 @@ export default function SubmissionForm({
   }, [activePreview, combinedPreviewUrls.length]);
 
   // Clean up Blob URLs
+  // Use a ref to track active URLs so we do not revoke them prematurely on state updates
+  const activeUrlsRef = useRef<string[]>([]);
+
   useEffect(() => {
-    // Create a list of URLs to revoke when component unmounts or items change
-    // We only need to revoke the ones we created (from uploadItems)
-    const urlsToRevoke = uploadItems.map(item => item.previewUrl);
+    const currentUrls = uploadItems.map(item => item.previewUrl);
+
+    // Revoke URLs that are in our ref but no longer in the current list (deleted items)
+    activeUrlsRef.current.forEach(url => {
+      if (!currentUrls.includes(url)) {
+        URL.revokeObjectURL(url);
+      }
+    });
+
+    // Update ref to current list
+    activeUrlsRef.current = currentUrls;
+  }, [uploadItems]);
+
+  // Final cleanup on unmount
+  useEffect(() => {
     return () => {
-      urlsToRevoke.forEach((url) => {
+      activeUrlsRef.current.forEach((url) => {
         URL.revokeObjectURL(url);
       });
     };
-  }, [uploadItems]);
+  }, []);
 
   const handleAddImageUrl = () => {
     const trimmed = newImageUrl.trim();
@@ -447,7 +462,7 @@ export default function SubmissionForm({
                 <div
                   className="h-[210px] w-full rounded-xl bg-cover bg-center"
                   style={{
-                    backgroundImage: `url(${combinedPreviewUrls[activePreview]})`,
+                    backgroundImage: `url("${combinedPreviewUrls[activePreview]}")`,
                   }}
                 />
 
