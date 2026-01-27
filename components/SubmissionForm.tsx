@@ -17,6 +17,15 @@ type MessageState = {
   text: string;
 };
 
+type UploadItem = {
+  id: string;
+  file?: File;
+  previewUrl: string;
+  status: 'pending' | 'uploading' | 'success' | 'error';
+  remoteUrl?: string;
+  error?: string;
+};
+
 export default function SubmissionForm({
   variant = "page",
   formId = "submission-form",
@@ -30,7 +39,10 @@ export default function SubmissionForm({
   const [imageUrlsText, setImageUrlsText] = useState("");
   const [demoUrl, setDemoUrl] = useState("");
   const [youtubeUrl, setYoutubeUrl] = useState("");
-  const [files, setFiles] = useState<File[]>([]);
+
+  // Replace simple files state with uploadItems
+  const [uploadItems, setUploadItems] = useState<UploadItem[]>([]);
+
   const [userId, setUserId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState<MessageState | null>(null);
@@ -40,33 +52,39 @@ export default function SubmissionForm({
   const [isDragging, setIsDragging] = useState(false);
   const isEnded = useSubmissionDeadline();
 
-  const previewUrls = useMemo(() => {
-    const urlPreviews = imageUrlsText
+  // Combined preview URLs from manual text and upload items
+  const combinedPreviewUrls = useMemo(() => {
+    const textUrls = imageUrlsText
       .split("\n")
       .map((line) => line.trim())
       .filter((line) => line.length > 0);
-    const filePreviews = files.map((item) => URL.createObjectURL(item));
-    return files.length > 0 ? filePreviews : urlPreviews;
-  }, [files, imageUrlsText]);
+
+    // Use previewUrl (blob) for pending/uploading/error, remoteUrl for success if available
+    // But for consistency in display, we might just stick to the preview blob 
+    // until we need to submit. However, if we want to show the processed image...
+    // Let's stick to the local preview for the UI to be snappy.
+    const fileUrls = uploadItems.map(item => item.previewUrl);
+
+    return [...fileUrls, ...textUrls];
+  }, [uploadItems, imageUrlsText]);
 
   useEffect(() => {
-    if (activePreview >= previewUrls.length) {
+    if (activePreview >= combinedPreviewUrls.length) {
       setActivePreview(0);
     }
-  }, [activePreview, previewUrls.length]);
+  }, [activePreview, combinedPreviewUrls.length]);
 
+  // Clean up Blob URLs
   useEffect(() => {
-    if (files.length === 0) {
-      return;
-    }
-    // 當有文件時，previewUrls 就是由文件創建的 object URLs，需要清理
-    const urlsToRevoke = files.length > 0 ? [...previewUrls] : [];
+    // Create a list of URLs to revoke when component unmounts or items change
+    // We only need to revoke the ones we created (from uploadItems)
+    const urlsToRevoke = uploadItems.map(item => item.previewUrl);
     return () => {
       urlsToRevoke.forEach((url) => {
         URL.revokeObjectURL(url);
       });
     };
-  }, [files, previewUrls]);
+  }, [uploadItems]);
 
   const handleAddImageUrl = () => {
     const trimmed = newImageUrl.trim();
@@ -78,6 +96,76 @@ export default function SubmissionForm({
       : trimmed;
     setImageUrlsText(nextText);
     setNewImageUrl("");
+  };
+
+  const uploadImage = async (item: UploadItem) => {
+    if (!item.file) return;
+
+    setUploadItems(prev => prev.map(i =>
+      i.id === item.id ? { ...i, status: 'uploading' } : i
+    ));
+
+    try {
+      if (!supabase) {
+        throw new Error("Supabase client not initialized");
+      }
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData.session?.access_token;
+
+      if (!accessToken) {
+        throw new Error("請先登入");
+      }
+
+      const formData = new FormData();
+      formData.append("files", item.file); // API expects "files" even for single
+
+      const uploadResponse = await fetch("/api/upload", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: formData,
+      });
+
+      if (!uploadResponse.ok) {
+        const errorData = await uploadResponse.json();
+        throw new Error(errorData?.error || "上傳失敗");
+      }
+
+      const uploadData = await uploadResponse.json();
+      const urls = Array.isArray(uploadData.urls) ? uploadData.urls : [];
+      const remoteUrl = urls[0];
+
+      if (!remoteUrl) {
+        throw new Error("未回傳圖片網址");
+      }
+
+      setUploadItems(prev => prev.map(i =>
+        i.id === item.id ? { ...i, status: 'success', remoteUrl } : i
+      ));
+
+    } catch (err: any) {
+      console.error(err);
+      setUploadItems(prev => prev.map(i =>
+        i.id === item.id ? { ...i, status: 'error', error: err.message } : i
+      ));
+    }
+  };
+
+  const handleFileSelect = (newFiles: File[]) => {
+    const newItems: UploadItem[] = newFiles.map(file => ({
+      id: Math.random().toString(36).substring(7),
+      file,
+      previewUrl: URL.createObjectURL(file), // Immediate preview
+      status: 'pending'
+    }));
+
+    setUploadItems(prev => [...prev, ...newItems]);
+
+    // Trigger upload for each new item
+    newItems.forEach(item => {
+      uploadImage(item);
+    });
   };
 
   useEffect(() => {
@@ -113,6 +201,20 @@ export default function SubmissionForm({
     event.preventDefault();
     setMessage(null);
 
+    // Check if any uploads are still in progress
+    const isUploading = uploadItems.some(item => item.status === 'uploading' || item.status === 'pending');
+    if (isUploading) {
+      setMessage({ type: "error", text: "圖片正在處理中，請稍候..." });
+      return;
+    }
+
+    // Check for failed uploads
+    const hasErrors = uploadItems.some(item => item.status === 'error');
+    if (hasErrors) {
+      setMessage({ type: "error", text: "有圖片上傳失敗，請移除或重試後再送出。" });
+      return;
+    }
+
     if (!supabase || !isSupabaseEnabled) {
       setMessage({ type: "error", text: "尚未設定 Supabase，無法投稿。" });
       return;
@@ -137,7 +239,7 @@ export default function SubmissionForm({
       return;
     }
 
-    if (files.length > 0 && !isSupabaseEnabled) {
+    if ((uploadItems.length > 0) && !isSupabaseEnabled) {
       setMessage({ type: "error", text: "尚未設定 Supabase，無法上傳。" });
       return;
     }
@@ -150,42 +252,13 @@ export default function SubmissionForm({
       .map((line) => line.trim())
       .filter((line) => line.length > 0);
 
-    let uploadedImageUrls: string[] = parsedUrls;
-    let uploadedImageUrl = uploadedImageUrls[0] || null;
-    if (files.length > 0) {
-      const { data: sessionData } = await supabase.auth.getSession();
-      const accessToken = sessionData.session?.access_token;
-      if (!accessToken) {
-        setMessage({ type: "error", text: "登入狀態已過期，請重新登入。" });
-        setIsSubmitting(false);
-        onSubmittingChange?.(false);
-        return;
-      }
-      const formData = new FormData();
-      files.forEach((item) => formData.append("files", item));
-      const uploadResponse = await fetch("/api/upload", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-        body: formData,
-      });
+    // Collect success URLs from uploadItems
+    const uploadedUrls = uploadItems
+      .filter(item => item.status === 'success' && item.remoteUrl)
+      .map(item => item.remoteUrl!);
 
-      if (!uploadResponse.ok) {
-        const errorData = await uploadResponse.json();
-        setMessage({
-          type: "error",
-          text: errorData?.error || "圖片上傳失敗",
-        });
-        setIsSubmitting(false);
-        onSubmittingChange?.(false);
-        return;
-      }
-
-      const uploadData = await uploadResponse.json();
-      uploadedImageUrls = Array.isArray(uploadData.urls) ? uploadData.urls : [];
-      uploadedImageUrl = uploadedImageUrls[0] || null;
-    }
+    const finalImageUrls = [...uploadedUrls, ...parsedUrls];
+    const finalImageUrl = finalImageUrls[0] || null;
 
     // 改為呼叫 API 進行投稿
     const { data: sessionData } = await supabase.auth.getSession();
@@ -208,8 +281,8 @@ export default function SubmissionForm({
         title,
         author_name: authorName,
         description,
-        image_url: uploadedImageUrl,
-        image_urls: uploadedImageUrls,
+        image_url: finalImageUrl,
+        image_urls: finalImageUrls,
         youtube_url: youtubeUrl || null,
         demo_url: demoUrl || null,
       }),
@@ -230,7 +303,7 @@ export default function SubmissionForm({
     setImageUrlsText("");
     setDemoUrl("");
     setYoutubeUrl("");
-    setFiles([]);
+    setUploadItems([]); // Clear uploads
     setMessage({ type: "success", text: "投稿成功，等待審核。" });
     setIsSubmitting(false);
     onSubmittingChange?.(false);
@@ -238,6 +311,8 @@ export default function SubmissionForm({
     setCanSubmit(false);
     onCanSubmitChange?.(false);
   };
+
+  const currentUploadItem = activePreview < uploadItems.length ? uploadItems[activePreview] : null;
 
   return (
     <form
@@ -300,7 +375,7 @@ export default function SubmissionForm({
       <div className="space-y-3">
         <p className="text-sm font-medium text-slate-700">作品圖片（可多張）</p>
         <div className="rounded-2xl border border-white/30 bg-white/60 p-4 shadow-blue-soft supports-[backdrop-filter]:bg-white/50 supports-[backdrop-filter]:backdrop-blur-md">
-          {previewUrls.length === 0 ? (
+          {combinedPreviewUrls.length === 0 ? (
             <label
               className={`flex w-full cursor-pointer flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed px-4 py-8 text-center text-sm text-slate-600 transition ${isDragging
                 ? "border-sky-400 bg-sky-50/50"
@@ -327,11 +402,13 @@ export default function SubmissionForm({
                 setIsDragging(false);
                 const droppedFiles = e.dataTransfer.files;
                 if (droppedFiles && droppedFiles.length > 0) {
-                  const imageFiles = Array.from(droppedFiles).filter((f) =>
-                    f.type.startsWith("image/")
-                  );
-                  if (imageFiles.length > 0) {
-                    setFiles(imageFiles);
+                  if (droppedFiles.length > 1) {
+                    setMessage({ type: "error", text: "一次僅能上傳一張圖片" });
+                  }
+
+                  const firstFile = droppedFiles[0];
+                  if (firstFile.type.startsWith("image/")) {
+                    handleFileSelect([firstFile]);
                   }
                 }
               }}
@@ -348,18 +425,20 @@ export default function SubmissionForm({
                 </p>
               </div>
               <span className="rounded-full bg-slate-900/10 px-4 py-2 text-xs font-semibold text-slate-700">
-                選擇圖片（可多選）
+                選擇圖片（單張選擇）
               </span>
               <input
                 type="file"
                 accept="image/*"
-                multiple
+                // Removed 'multiple' to enforce single selection via dialog
                 className="sr-only"
-                onChange={(event) =>
-                  setFiles(
-                    event.target.files ? Array.from(event.target.files) : []
-                  )
-                }
+                onChange={(event) => {
+                  if (event.target.files && event.target.files.length > 0) {
+                    handleFileSelect(Array.from(event.target.files));
+                    // Reset input so same file can be selected again if needed
+                    event.target.value = "";
+                  }
+                }}
               />
             </label>
           ) : (
@@ -368,40 +447,77 @@ export default function SubmissionForm({
                 <div
                   className="h-[210px] w-full rounded-xl bg-cover bg-center"
                   style={{
-                    backgroundImage: `url(${previewUrls[activePreview]})`,
+                    backgroundImage: `url(${combinedPreviewUrls[activePreview]})`,
                   }}
                 />
-                <div className="absolute left-3 top-3 rounded-full bg-white/80 px-2 py-1 text-xs font-medium text-slate-600 shadow-sm">
-                  {activePreview + 1}/{previewUrls.length}
+
+                {/* Upload Status Overlay */}
+                {currentUploadItem && currentUploadItem.status === 'uploading' && (
+                  <div className="absolute inset-0 z-10 flex flex-col items-center justify-center rounded-xl bg-black/40 backdrop-blur-[2px]">
+                    <div className="h-8 w-8 animate-spin rounded-full border-2 border-white/20 border-t-white" />
+                    <span className="mt-2 text-xs font-medium text-white">處理中...</span>
+                  </div>
+                )}
+
+                {/* Error Overlay */}
+                {currentUploadItem && currentUploadItem.status === 'error' && (
+                  <div className="absolute inset-0 z-10 flex flex-col items-center justify-center rounded-xl bg-red-500/80 backdrop-blur-[2px] px-4 text-center">
+                    <span className="text-2xl">⚠️</span>
+                    <span className="mt-1 text-xs font-bold text-white">上傳失敗</span>
+                    <span className="text-[10px] text-white/90">{currentUploadItem.error}</span>
+                    <button
+                      type="button"
+                      onClick={() => uploadImage(currentUploadItem)}
+                      className="mt-2 rounded-full bg-white px-3 py-1 text-xs font-bold text-red-600 shadow-sm"
+                    >
+                      重試
+                    </button>
+                  </div>
+                )}
+
+                {/* Success Indicator (Optional, but nice) */}
+                {currentUploadItem && currentUploadItem.status === 'success' && (
+                  <div className="absolute right-3 bottom-3 z-10 rounded-full bg-emerald-500 px-2 py-0.5 text-[10px] font-bold text-white shadow-sm">
+                    ✓ 已上傳
+                  </div>
+                )}
+
+                <div className="absolute left-3 top-3 rounded-full bg-white/80 px-2 py-1 text-xs font-medium text-slate-600 shadow-sm z-20">
+                  {activePreview + 1}/{combinedPreviewUrls.length}
                 </div>
                 <button
                   type="button"
                   onClick={() => {
-                    if (files.length > 0) {
-                      const newFiles = files.filter((_, i) => i !== activePreview);
-                      setFiles(newFiles);
+                    // Logic to remove the current item
+                    if (activePreview < uploadItems.length) {
+                      // Removing an uploaded item
+                      setUploadItems(prev => prev.filter((_, i) => i !== activePreview));
                     } else {
-                      const lines = imageUrlsText.split("\n").filter((_, i) => i !== activePreview);
-                      setImageUrlsText(lines.join("\n"));
+                      // Removing a manual URL
+                      const manualIndex = activePreview - uploadItems.length;
+                      const lines = imageUrlsText.split("\n").filter((l) => l.trim().length > 0);
+                      const newLines = lines.filter((_, i) => i !== manualIndex);
+                      setImageUrlsText(newLines.join("\n"));
                     }
-                    if (activePreview >= previewUrls.length - 1) {
-                      setActivePreview(Math.max(0, previewUrls.length - 2));
+
+                    if (activePreview >= combinedPreviewUrls.length - 1) {
+                      setActivePreview(Math.max(0, combinedPreviewUrls.length - 2));
                     }
                   }}
-                  className="absolute right-3 top-3 flex h-6 w-6 items-center justify-center rounded-full bg-white/80 text-xs text-slate-600 shadow-sm transition hover:bg-red-100 hover:text-red-600"
+                  className="absolute right-3 top-3 flex h-6 w-6 items-center justify-center rounded-full bg-white/80 text-xs text-slate-600 shadow-sm transition hover:bg-red-100 hover:text-red-600 z-20"
                 >
                   ✕
                 </button>
-                {previewUrls.length > 1 && (
+                {combinedPreviewUrls.length > 1 && (
                   <>
                     <button
                       type="button"
                       onClick={() =>
                         setActivePreview((prev) =>
-                          prev === 0 ? previewUrls.length - 1 : prev - 1
+                          prev === 0 ? combinedPreviewUrls.length - 1 : prev - 1
                         )
                       }
-                      className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full bg-white/80 px-2 py-1 text-xs text-slate-600 shadow-sm transition hover:bg-white"
+                      className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full bg-white/80 px-2 py-1 text-xs text-slate-600 shadow-sm transition hover:bg-white z-20"
                     >
                       ‹
                     </button>
@@ -409,19 +525,19 @@ export default function SubmissionForm({
                       type="button"
                       onClick={() =>
                         setActivePreview((prev) =>
-                          prev === previewUrls.length - 1 ? 0 : prev + 1
+                          prev === combinedPreviewUrls.length - 1 ? 0 : prev + 1
                         )
                       }
-                      className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full bg-white/80 px-2 py-1 text-xs text-slate-600 shadow-sm transition hover:bg-white"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full bg-white/80 px-2 py-1 text-xs text-slate-600 shadow-sm transition hover:bg-white z-20"
                     >
                       ›
                     </button>
                   </>
                 )}
               </div>
-              {previewUrls.length > 1 && (
+              {combinedPreviewUrls.length > 1 && (
                 <div className="flex flex-wrap items-center justify-center gap-1">
-                  {previewUrls.map((_, index) => (
+                  {combinedPreviewUrls.map((_, index) => (
                     <button
                       key={`preview-${index}`}
                       type="button"
@@ -434,20 +550,24 @@ export default function SubmissionForm({
                   ))}
                 </div>
               )}
-              <label className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-slate-900/10 px-4 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-900/20">
-                <span>＋ 新增更多圖片</span>
-                <input
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  className="sr-only"
-                  onChange={(event) => {
-                    if (event.target.files) {
-                      setFiles((prev) => [...prev, ...Array.from(event.target.files!)]);
-                    }
-                  }}
-                />
-              </label>
+
+              <div className="flex gap-2">
+                <label className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-full bg-slate-900/10 px-4 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-900/20">
+                  <span>＋ 新增更多圖片</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    // Removed multiple here too
+                    className="sr-only"
+                    onChange={(event) => {
+                      if (event.target.files && event.target.files.length > 0) {
+                        handleFileSelect(Array.from(event.target.files));
+                        event.target.value = "";
+                      }
+                    }}
+                  />
+                </label>
+              </div>
             </div>
           )}
           <div className="mt-4 space-y-2">
@@ -504,7 +624,7 @@ export default function SubmissionForm({
               ? "活動已截止"
               : isSubmitting
                 ? "送出中..."
-                : "送出投稿"
+                : (uploadItems.some(i => i.status === 'uploading' || i.status === 'pending') ? "圖片處理中..." : "送出投稿")
             }
           </button>
         </div>
